@@ -29,19 +29,21 @@
   </scm>
   <properties>
     <changelist>-SNAPSHOT</changelist>
-    <java.version>1.8</java.version>
+    <java.version>25</java.version>
     <jclouds.version>2.3.0</jclouds.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <metrics.version>4.2.0</metrics.version>
+    <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <revision>0.0.2</revision>
     <sha1></sha1>
-    <teragrep.jue_01.version>0.4.3</teragrep.jue_01.version>
-    <teragrep.rad_01.version>1.0.1</teragrep.rad_01.version>
-    <teragrep.rlo_06.version>9.0.1</teragrep.rlo_06.version>
   </properties>
   <dependencies>
+    <dependency>
+      <groupId>com.goterl</groupId>
+      <artifactId>lazysodium-java</artifactId>
+      <version>5.2.0</version>
+      <scope>compile</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
@@ -193,7 +195,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>2.30.0</version>
+        <version>3.2.1</version>
         <configuration>
           <java>
             <eclipse>
