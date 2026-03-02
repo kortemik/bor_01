@@ -43,24 +43,36 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+public class IndexFake implements Index {
 
-import java.util.List;
+    private final long id;
+    private final String name;
 
-public interface OutBox {
+    public IndexFake() {
+        this.id = 138;
+        this.name = "test-index";
+    }
 
-    public abstract void objectFinalized(Metadata metadata);
+    public IndexFake(long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 
-    public abstract void objectStored(Metadata metadata);
+    @Override
+    public long id() {
+        return id;
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    @Override
+    public String name() {
+        return name;
+    }
 
-    public abstract List<Metadata> pendingObjectStore();
+    @Override
+    public String toString() {
+        return "IndexFake{" + "id=" + id + ", name='" + name + '\'' + '}';
+    }
 
-    public abstract List<Metadata> pendingMetadataStore();
-
-    public abstract MerkleRangeTree tree();
 }

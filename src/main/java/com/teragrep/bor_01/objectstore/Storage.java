@@ -43,9 +43,21 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.transaction;
+package com.teragrep.bor_01.objectstore;
 
-public interface Stamp extends Comparable<Stamp> {
+import com.teragrep.bor_01.metadata.Namespace;
 
-    public abstract long stamp();
+import java.net.URL;
+import java.nio.file.Path;
+import java.time.Duration;
+
+public interface Storage {
+
+    URL url();
+
+    void put(Namespace namespace, Path path, byte[] content, Duration retention);
+
+    byte[] get(Namespace namespace, Path path);
+
+    void delete(Namespace namespace, Path path);
 }

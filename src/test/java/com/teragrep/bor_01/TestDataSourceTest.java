@@ -43,10 +43,25 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.transaction;
+package com.teragrep.bor_01;
 
-import java.util.function.Supplier;
+import com.goterl.lazysodium.exceptions.SodiumException;
+import com.teragrep.bor_01.object.Context;
+import org.junit.jupiter.api.Test;
 
-public interface Stampbooth extends Supplier<Stamp> {
+import java.security.NoSuchAlgorithmException;
+
+public class TestDataSourceTest {
+
+    @Test
+    public void test() throws SodiumException, NoSuchAlgorithmException {
+        TestDataSource testDataSource = new TestDataSource();
+
+        Context context = testDataSource.get();
+
+        System.out.println(context);
+
+        System.out.println(context.metadata().point().toHex());
+    }
 
 }

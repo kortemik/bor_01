@@ -43,24 +43,85 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+import com.goterl.lazysodium.interfaces.Ristretto255;
+import com.teragrep.bor_01.id.Id;
 
-import java.util.List;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 
-public interface OutBox {
+public class MetadataStub implements Metadata {
 
-    public abstract void objectFinalized(Metadata metadata);
+    private final boolean isStub;
 
-    public abstract void objectStored(Metadata metadata);
+    public MetadataStub() {
+        this(true);
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    private MetadataStub(boolean isStub) {
+        this.isStub = isStub;
+    }
 
-    public abstract List<Metadata> pendingObjectStore();
+    @Override
+    public Index index() {
+        throw new UnsupportedOperationException("stub");
+    }
 
-    public abstract List<Metadata> pendingMetadataStore();
+    @Override
+    public Site site() {
+        throw new UnsupportedOperationException("stub");
+    }
 
-    public abstract MerkleRangeTree tree();
+    @Override
+    public Id id() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public Instant epochHour() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public Duration retention() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public Namespace namespace() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public Path path() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public byte[] sha256() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public Ristretto255.RistrettoPoint point() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public RowKey rowKey() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public byte[] asBytes() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public boolean isStub() {
+        return isStub;
+    }
+
 }

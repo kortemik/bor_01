@@ -43,24 +43,28 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+public class NamespaceFake implements Namespace {
 
-import java.util.List;
+    private final String name;
 
-public interface OutBox {
+    public NamespaceFake() {
+        this("year-store");
+    }
 
-    public abstract void objectFinalized(Metadata metadata);
+    public NamespaceFake(String name) {
+        this.name = name;
+    }
 
-    public abstract void objectStored(Metadata metadata);
+    @Override
+    public String name() {
+        return name;
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    @Override
+    public String toString() {
+        return "NamespaceFake{" + "name='" + name + '\'' + '}';
+    }
 
-    public abstract List<Metadata> pendingObjectStore();
-
-    public abstract List<Metadata> pendingMetadataStore();
-
-    public abstract MerkleRangeTree tree();
 }

@@ -43,24 +43,36 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.object;
 
 import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
 
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 
-public interface OutBox {
+public class ContextImpl implements Context {
 
-    public abstract void objectFinalized(Metadata metadata);
+    private final Metadata metadata;
+    private final byte[] content;
 
-    public abstract void objectStored(Metadata metadata);
+    public ContextImpl(final Metadata metadata, final byte[] content) {
+        this.metadata = metadata;
+        this.content = content;
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    @Override
+    public Metadata metadata() {
+        return metadata;
+    }
 
-    public abstract List<Metadata> pendingObjectStore();
+    @Override
+    public byte[] content() {
+        return content;
+    }
 
-    public abstract List<Metadata> pendingMetadataStore();
+    @Override
+    public String toString() {
+        return "ContextImpl{" + "metadata=" + metadata + ", content=" + new String(content, StandardCharsets.UTF_8)
+                + '}';
+    }
 
-    public abstract MerkleRangeTree tree();
 }

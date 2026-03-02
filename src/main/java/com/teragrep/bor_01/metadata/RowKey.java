@@ -43,24 +43,24 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+import com.teragrep.bor_01.Stubable;
+import com.teragrep.bor_01.id.Id;
 
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.time.Instant;
 
-public interface OutBox {
+// perhaps comparable but taking a shortcut for now
+public interface RowKey extends Stubable {
 
-    public abstract void objectFinalized(Metadata metadata);
+    public abstract Index index();
 
-    public abstract void objectStored(Metadata metadata);
+    public abstract Instant epochHour();
 
-    public abstract void metadataStored(Metadata metadata);
+    public abstract Id id();
 
-    public abstract List<Metadata> pendingObjectStore();
+    public abstract Site site();
 
-    public abstract List<Metadata> pendingMetadataStore();
-
-    public abstract MerkleRangeTree tree();
+    public abstract ByteBuffer asBytes();
 }

@@ -43,40 +43,74 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.metadata;
+package com.teragrep.bor_01;
 
-import com.goterl.lazysodium.exceptions.SodiumException;
-import com.goterl.lazysodium.interfaces.Ristretto255;
-import com.teragrep.bor_01.Stubable;
-import com.teragrep.bor_01.id.Id;
+import com.teragrep.bor_01.id.Allocation;
+import com.teragrep.bor_01.id.AllocationImpl;
+import com.teragrep.bor_01.metadata.*;
+import com.teragrep.bor_01.object.Context;
+import com.teragrep.bor_01.object.ContextImpl;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
+import java.util.function.Supplier;
 
-public interface Metadata extends Stubable {
+public final class TestDataSource implements Supplier<Context> {
 
-    public abstract Index index();
+    private final Index index;
+    private final Site site;
+    private final Allocation allocation;
+    private final Namespace namespace;
+    private final String testContentPrefix;
 
-    public abstract Site site();
+    public TestDataSource() {
+        this.index = new IndexFake();
+        this.site = new SiteFake();
+        this.allocation = new AllocationImpl();
+        this.namespace = new NamespaceFake();
+        this.testContentPrefix = "test data at Instant.now() -> ";
 
-    public abstract Id id();
+    }
 
-    public abstract Instant epochHour();
+    @Override
+    public Context get() {
+        String content = testContentPrefix + Instant.now();
+        byte[] contentBytes = content.getBytes(StandardCharsets.UTF_8);
 
-    public abstract Duration retention();
+        // reusing same digest instance and .reset() it is preferred way
+        MessageDigest md256 = null;
+        try {
+            md256 = MessageDigest.getInstance("SHA-256");
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
 
-    public abstract Namespace namespace();
+        byte[] contentSha256 = md256.digest(contentBytes);
 
-    public abstract Path path();
+        String path = "/some/random/path/" + UUID.randomUUID();
 
-    public abstract byte[] sha256();
+        Instant instant = Instant.now();
+        long epochHourLong = instant.getEpochSecond() - instant.getEpochSecond() % 3600;
+        Instant epochHour = Instant.ofEpochSecond(epochHourLong);
 
-    public abstract Ristretto255.RistrettoPoint point() throws NoSuchAlgorithmException, SodiumException;
+        Metadata metadata = new MetadataImpl(
+                index,
+                site,
+                allocation.get(),
+                epochHour,
+                Duration.ofSeconds(10),
+                namespace,
+                Path.of(path),
+                contentSha256
+        );
 
-    public abstract RowKey rowKey();
-
-    byte[] asBytes();
+        return new ContextImpl(metadata, contentBytes);
+    }
 
 }

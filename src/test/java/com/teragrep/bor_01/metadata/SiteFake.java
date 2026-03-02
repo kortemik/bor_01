@@ -43,24 +43,31 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+public class SiteFake implements Site {
 
-import java.util.List;
+    private final int id;
+    private final String name;
 
-public interface OutBox {
+    public SiteFake() {
+        this.id = 2;
+        this.name = "off-site";
+    }
 
-    public abstract void objectFinalized(Metadata metadata);
+    @Override
+    public long id() {
+        return id;
+    }
 
-    public abstract void objectStored(Metadata metadata);
+    @Override
+    public String name() {
+        return name;
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    @Override
+    public String toString() {
+        return "SiteFake{" + "id=" + id + ", name='" + name + '\'' + '}';
+    }
 
-    public abstract List<Metadata> pendingObjectStore();
-
-    public abstract List<Metadata> pendingMetadataStore();
-
-    public abstract MerkleRangeTree tree();
 }

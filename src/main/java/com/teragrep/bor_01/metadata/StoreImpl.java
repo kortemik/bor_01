@@ -43,24 +43,51 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.TreeMap;
 
-import java.util.List;
+public class StoreImpl implements Store {
 
-public interface OutBox {
+    private final Map<ByteBuffer, Metadata> store;
+    private final Metadata metadataStub;
 
-    public abstract void objectFinalized(Metadata metadata);
+    public StoreImpl() {
+        this(new TreeMap<>(), new MetadataStub());
+    }
 
-    public abstract void objectStored(Metadata metadata);
+    private StoreImpl(Map<ByteBuffer, Metadata> store, Metadata metadataStub) {
+        this.store = store;
+        this.metadataStub = metadataStub;
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    @Override
+    public void put(final Metadata metadata) {
+        final ByteBuffer rowKeyByteBuffer = metadata.rowKey().asBytes();
 
-    public abstract List<Metadata> pendingObjectStore();
+        if (store.containsKey(rowKeyByteBuffer)) {
+            throw new IllegalArgumentException("Duplicate row key: " + metadata.rowKey());
+        }
 
-    public abstract List<Metadata> pendingMetadataStore();
+        store.put(rowKeyByteBuffer, metadata);
+    }
 
-    public abstract MerkleRangeTree tree();
+    @Override
+    public Metadata get(final RowKey rowKey) {
+        return store.getOrDefault(rowKey.asBytes(), metadataStub);
+    }
+
+    @Override
+    public void delete(final RowKey rowKey) {
+        final ByteBuffer rowKeyByteBuffer = rowKey.asBytes();
+
+        if (!store.containsKey(rowKeyByteBuffer)) {
+            throw new IllegalArgumentException("Non-existing row key: " + rowKey);
+        }
+
+        store.remove(rowKeyByteBuffer);
+    }
+
 }

@@ -43,24 +43,60 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+import com.teragrep.bor_01.id.Id;
 
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.time.Instant;
 
-public interface OutBox {
+public class RowKeyImpl implements RowKey {
 
-    public abstract void objectFinalized(Metadata metadata);
+    private final Index index;
+    private final Instant epochHour;
+    private final Id id;
+    private final Site site;
 
-    public abstract void objectStored(Metadata metadata);
+    public RowKeyImpl(Index index, Instant epochHour, Id id, Site site) {
+        this.index = index;
+        this.epochHour = epochHour;
+        this.id = id;
+        this.site = site;
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    @Override
+    public Index index() {
+        return index;
+    }
 
-    public abstract List<Metadata> pendingObjectStore();
+    @Override
+    public Instant epochHour() {
+        return epochHour;
+    }
 
-    public abstract List<Metadata> pendingMetadataStore();
+    @Override
+    public Id id() {
+        return id;
+    }
 
-    public abstract MerkleRangeTree tree();
+    @Override
+    public Site site() {
+        return site;
+    }
+
+    @Override
+    public ByteBuffer asBytes() {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES * 4);
+        buffer.putLong(index.id());
+        buffer.putLong(epochHour.getEpochSecond());
+        buffer.putLong(id.id());
+        buffer.putLong(site.id());
+        return buffer.flip();
+    }
+
+    @Override
+    public boolean isStub() {
+        return false;
+    }
+
 }

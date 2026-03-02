@@ -43,24 +43,24 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.id;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+public class IdImpl implements Id {
 
-import java.util.List;
+    private final long id;
 
-public interface OutBox {
+    public IdImpl(long id) {
+        this.id = id;
+    }
 
-    public abstract void objectFinalized(Metadata metadata);
+    @Override
+    public long id() {
+        return id;
+    }
 
-    public abstract void objectStored(Metadata metadata);
+    @Override
+    public String toString() {
+        return "IdImpl{" + "id=" + id + '}';
+    }
 
-    public abstract void metadataStored(Metadata metadata);
-
-    public abstract List<Metadata> pendingObjectStore();
-
-    public abstract List<Metadata> pendingMetadataStore();
-
-    public abstract MerkleRangeTree tree();
 }

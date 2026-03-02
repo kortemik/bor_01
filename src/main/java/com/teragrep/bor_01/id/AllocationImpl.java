@@ -43,24 +43,25 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.outbox;
+package com.teragrep.bor_01.id;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+import java.util.concurrent.atomic.AtomicLong;
 
-import java.util.List;
+public class AllocationImpl implements Allocation {
 
-public interface OutBox {
+    private final AtomicLong counter;
 
-    public abstract void objectFinalized(Metadata metadata);
+    public AllocationImpl() {
+        this(new AtomicLong());
+    }
 
-    public abstract void objectStored(Metadata metadata);
+    private AllocationImpl(AtomicLong counter) {
+        this.counter = counter;
+    }
 
-    public abstract void metadataStored(Metadata metadata);
+    @Override
+    public Id get() {
+        return new IdImpl(counter.incrementAndGet());
+    }
 
-    public abstract List<Metadata> pendingObjectStore();
-
-    public abstract List<Metadata> pendingMetadataStore();
-
-    public abstract MerkleRangeTree tree();
 }
