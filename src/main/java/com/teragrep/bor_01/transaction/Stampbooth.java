@@ -43,9 +43,10 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01;
+package com.teragrep.bor_01.transaction;
 
-public interface Stamp extends Comparable<Stamp> {
+import java.util.function.Supplier;
 
-    public abstract long stamp();
+public interface Stampbooth extends Supplier<Stamp> {
+
 }

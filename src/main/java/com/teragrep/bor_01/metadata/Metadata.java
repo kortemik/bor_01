@@ -43,10 +43,20 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01;
+package com.teragrep.bor_01.metadata;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import com.goterl.lazysodium.interfaces.Ristretto255;
+import com.teragrep.bor_01.transaction.Site;
+import com.teragrep.bor_01.transaction.Stamp;
 
-public interface WriteAheadLog extends Consumer<Metadata>, Supplier<Metadata> {
+import java.nio.file.Path;
+import java.time.Instant;
+
+public interface Metadata {
+    public abstract Site site();
+    public abstract Stamp stamp();
+    public abstract Instant timestamp();
+    public abstract Path path();
+    public abstract Ristretto255.RistrettoPoint point();
+    public abstract State state();
 }
