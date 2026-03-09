@@ -48,6 +48,7 @@ package com.teragrep.bor_01;
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
 import com.goterl.lazysodium.exceptions.SodiumException;
+import com.teragrep.bor_01.metadata.Metadata;
 import com.teragrep.bor_01.metadata.MetadataStorage;
 import com.teragrep.bor_01.metadata.MetadataStorageImpl;
 import com.teragrep.bor_01.object.Context;
@@ -58,6 +59,7 @@ import com.teragrep.bor_01.objectstore.StorageImpl;
 import com.teragrep.bor_01.outbox.OutBox;
 import com.teragrep.bor_01.outbox.OutBoxImpl;
 import com.teragrep.bor_01.tree.DiffUtil;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
@@ -85,8 +87,9 @@ public class TestDataSourceTest {
 
         MetadataStorage metadataStorageA = new MetadataStorageImpl();
 
-        long count = 1;
-        while (count > 0) {
+        final long count = 1;
+        long loops = 1;
+        while (loops > 0) {
             Context context = testDataSource.get();
 
             //System.out.println(context);
@@ -106,15 +109,10 @@ public class TestDataSourceTest {
 
             outBoxA.metadataStored(context.metadata());
 
-            count--;
+            loops--;
         }
 
         // site B
-        // once in 5 seconds
-        // requires list of indexes for trees
-        // get local tree roots, get remote tree roots
-        // check validity, if not, drill down to applicaple ranges
-        // create and insert missing metadata to local
 
         OutBox outBoxB = new OutBoxImpl(lazySodiumJava);
 
@@ -123,8 +121,37 @@ public class TestDataSourceTest {
         MetadataStorage metadataStorageB = new MetadataStorageImpl();
 
         Queue<DiffUtil.DiffResult> modifiedHourStarts = DiffUtil.compareTrees(outBoxA, outBoxB);
+        Assertions.assertEquals(count, modifiedHourStarts.size());
 
         System.out.println("modifiedHourStarts: " + modifiedHourStarts);
+
+        while (modifiedHourStarts.size() > 0) {
+            DiffUtil.DiffResult diffResult = modifiedHourStarts.poll();
+            List<Metadata> downloadManifest = metadataStorageA.get(diffResult.index(), diffResult.instant());
+            System.out.println(downloadManifest);
+
+            // download stuff
+            for (Metadata metadataIn : downloadManifest) {
+                // download to site B, perhaps mark as sync or so in the outbox while doing so or use some work scheduling
+                byte[] contentIn = storageA.get(metadataIn.namespace(), metadataIn.path());
+                // mark as ready
+                outBoxB.objectFinalized(metadataIn);
+                // store object on site B
+                storageB.put(metadataIn.namespace(), metadataIn.path(), contentIn, metadataIn.retention());
+                // mark as stored
+                outBoxB.objectStored(metadataIn);
+                // store metadata
+                metadataStorageB.put(metadataIn);
+                // mark as metadata stored
+                outBoxB.metadataStored(metadataIn);
+                // done
+            }
+        }
+
+        Queue<DiffUtil.DiffResult> afterSyncDiffResult = DiffUtil.compareTrees(outBoxA, outBoxB);
+        System.out.println("afterSyncDiffResult: " + afterSyncDiffResult);
+
+        Assertions.assertEquals(0, afterSyncDiffResult.size());
     }
 
 }

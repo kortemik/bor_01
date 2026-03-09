@@ -100,7 +100,6 @@ public class DiffUtil {
             MerkleTree siteBTree = outBoxB.trees().get(siteAIndex2TreeEntry.getKey());
 
             if (!siteBTree.root().equals(siteAIndex2TreeEntry.getValue().root())) {
-                System.out.println("there some difference");
 
                 // find out changed years
                 NavigableMap<Instant, Ristretto255.RistrettoPoint> siteAYear2PointMap = siteAIndex2TreeEntry

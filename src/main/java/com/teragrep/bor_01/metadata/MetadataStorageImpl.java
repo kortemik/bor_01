@@ -46,8 +46,8 @@
 package com.teragrep.bor_01.metadata;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.TreeMap;
+import java.time.Instant;
+import java.util.*;
 
 public class MetadataStorageImpl implements MetadataStorage {
 
@@ -88,6 +88,24 @@ public class MetadataStorageImpl implements MetadataStorage {
         }
 
         store.remove(rowKeyByteBuffer);
+    }
+
+    @Override
+    public List<Metadata> get(Index index, Instant epochHourStart) {
+        List<Metadata> result = new LinkedList<>();
+
+        // todo perhaps this to RowKey itself as match(x,y)
+        for (Map.Entry<ByteBuffer, Metadata> entry : store.entrySet()) {
+            ByteBuffer rowkeyBB = entry.getKey().duplicate();
+
+            long indexId = rowkeyBB.getLong();
+            long rowKeyepochHourStart = rowkeyBB.getLong();
+
+            if (index.id() == indexId && epochHourStart.getEpochSecond() == rowKeyepochHourStart) {
+                result.add(entry.getValue());
+            }
+        }
+        return result;
     }
 
 }

@@ -45,6 +45,9 @@
  */
 package com.teragrep.bor_01.metadata;
 
+import java.time.Instant;
+import java.util.List;
+
 public interface MetadataStorage {
 
     public abstract void put(Metadata metadata);
@@ -52,4 +55,7 @@ public interface MetadataStorage {
     public abstract Metadata get(RowKey rowKey);
 
     public abstract void delete(RowKey rowKey);
+
+    List<Metadata> get(Index index, Instant epochHourStart);
+
 }
