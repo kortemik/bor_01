@@ -43,15 +43,13 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.metadata;
+package com.teragrep.bor_01.objectstore;
+
+import java.util.Objects;
 
 public class NamespaceFake implements Namespace {
 
     private final String name;
-
-    public NamespaceFake() {
-        this("year-store");
-    }
 
     public NamespaceFake(String name) {
         this.name = name;
@@ -65,6 +63,19 @@ public class NamespaceFake implements Namespace {
     @Override
     public String toString() {
         return "NamespaceFake{" + "name='" + name + '\'' + '}';
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        final NamespaceFake that = (NamespaceFake) o;
+        return Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name);
     }
 
 }

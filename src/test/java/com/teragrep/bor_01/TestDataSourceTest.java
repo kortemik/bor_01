@@ -45,23 +45,86 @@
  */
 package com.teragrep.bor_01;
 
+import com.goterl.lazysodium.LazySodiumJava;
+import com.goterl.lazysodium.SodiumJava;
 import com.goterl.lazysodium.exceptions.SodiumException;
+import com.teragrep.bor_01.metadata.MetadataStorage;
+import com.teragrep.bor_01.metadata.MetadataStorageImpl;
 import com.teragrep.bor_01.object.Context;
+import com.teragrep.bor_01.objectstore.Namespace;
+import com.teragrep.bor_01.objectstore.NamespaceFake;
+import com.teragrep.bor_01.objectstore.Storage;
+import com.teragrep.bor_01.objectstore.StorageImpl;
+import com.teragrep.bor_01.outbox.OutBox;
+import com.teragrep.bor_01.outbox.OutBoxImpl;
+import com.teragrep.bor_01.tree.DiffUtil;
 import org.junit.jupiter.api.Test;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.util.*;
 
 public class TestDataSourceTest {
 
     @Test
-    public void test() throws SodiumException, NoSuchAlgorithmException {
+    public void test() throws SodiumException, NoSuchAlgorithmException, MalformedURLException {
+
+        NavigableMap<Duration, Namespace> durationMap = new TreeMap<>();
+        durationMap.put(Duration.ofSeconds(10L), new NamespaceFake("year-store"));
+
         TestDataSource testDataSource = new TestDataSource();
 
-        Context context = testDataSource.get();
+        LazySodiumJava lazySodiumJava = new LazySodiumJava(new SodiumJava());
 
-        System.out.println(context);
+        // site A
+        OutBox outBoxA = new OutBoxImpl(lazySodiumJava);
 
-        System.out.println(context.metadata().point().toHex());
+        Storage storageA = new StorageImpl(new URL("https://localhost:8123/s3"), durationMap);
+
+        MetadataStorage metadataStorageA = new MetadataStorageImpl();
+
+        long count = 1;
+        while (count > 0) {
+            Context context = testDataSource.get();
+
+            //System.out.println(context);
+            //System.out.println(context.metadata().point().toHex());
+
+            outBoxA.objectFinalized(context.metadata());
+
+            storageA
+                    .put(
+                            context.metadata().namespace(), context.metadata().path(), context.content(),
+                            context.metadata().retention()
+                    );
+
+            outBoxA.objectStored(context.metadata());
+
+            metadataStorageA.put(context.metadata());
+
+            outBoxA.metadataStored(context.metadata());
+
+            count--;
+        }
+
+        // site B
+        // once in 5 seconds
+        // requires list of indexes for trees
+        // get local tree roots, get remote tree roots
+        // check validity, if not, drill down to applicaple ranges
+        // create and insert missing metadata to local
+
+        OutBox outBoxB = new OutBoxImpl(lazySodiumJava);
+
+        Storage storageB = new StorageImpl(new URL("https://localhost:8080/s3"), durationMap);
+
+        MetadataStorage metadataStorageB = new MetadataStorageImpl();
+
+        Queue<DiffUtil.DiffResult> modifiedHourStarts = DiffUtil.compareTrees(outBoxA, outBoxB);
+
+        System.out.println("modifiedHourStarts: " + modifiedHourStarts);
     }
 
 }

@@ -57,6 +57,7 @@ import java.time.Instant;
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
 import com.goterl.lazysodium.exceptions.SodiumException;
+import com.teragrep.bor_01.objectstore.Namespace;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

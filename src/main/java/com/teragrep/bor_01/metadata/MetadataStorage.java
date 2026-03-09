@@ -43,14 +43,13 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.sync;
+package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleTree;
+public interface MetadataStorage {
 
-import java.util.List;
+    public abstract void put(Metadata metadata);
 
-public interface Sync {
+    public abstract Metadata get(RowKey rowKey);
 
-    public abstract List<Metadata> sync(MerkleTree tree);
+    public abstract void delete(RowKey rowKey);
 }

@@ -43,86 +43,71 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.metadata;
+package com.teragrep.bor_01.objectstore;
 
-import com.goterl.lazysodium.interfaces.Ristretto255;
-import com.teragrep.bor_01.id.Id;
-import com.teragrep.bor_01.objectstore.Namespace;
-
+import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.Instant;
+import java.util.*;
 
-public class MetadataStub implements Metadata {
+public class StorageImpl implements Storage {
 
-    private final boolean isStub;
+    private final URL url;
+    private final NavigableMap<Duration, Namespace> retentionCategories;
+    private final Map<Namespace, Map<Path, byte[]>> contentMap;
 
-    public MetadataStub() {
-        this(true);
+    public StorageImpl(final URL url, final NavigableMap<Duration, Namespace> retentionCategories) {
+        this(url, retentionCategories, new HashMap<>());
     }
 
-    private MetadataStub(boolean isStub) {
-        this.isStub = isStub;
-    }
+    public StorageImpl(
+            final URL url,
+            final NavigableMap<Duration, Namespace> retentionCategories,
+            final Map<Namespace, Map<Path, byte[]>> contentMap
+    ) {
+        this.url = url;
+        this.retentionCategories = retentionCategories;
+        this.contentMap = contentMap;
 
-    @Override
-    public Index index() {
-        throw new UnsupportedOperationException("stub");
-    }
-
-    @Override
-    public Site site() {
-        throw new UnsupportedOperationException("stub");
-    }
-
-    @Override
-    public Id id() {
-        throw new UnsupportedOperationException("stub");
-    }
-
-    @Override
-    public Instant epochHour() {
-        throw new UnsupportedOperationException("stub");
+        for (Map.Entry<Duration, Namespace> entry : retentionCategories.entrySet()) {
+            Namespace namespace = entry.getValue();
+            contentMap.put(namespace, new HashMap<>());
+        }
     }
 
     @Override
-    public Duration retention() {
-        throw new UnsupportedOperationException("stub");
+    public URL url() {
+        return url;
     }
 
     @Override
-    public Namespace namespace() {
-        throw new UnsupportedOperationException("stub");
+    public void put(final Namespace namespace, final Path path, final byte[] content, final Duration retention) {
+        Map.Entry<Duration, Namespace> entry = retentionCategories.ceilingEntry(retention);
+
+        if (!entry.getValue().equals(namespace)) {
+            throw new IllegalArgumentException(
+                    "provided duration maps to pre-defined namespace <" + entry.getValue()
+                            + "> but provided namespace was <[" + namespace + "]>"
+            );
+        }
+
+        contentMap.get(namespace).put(path, content);
     }
 
     @Override
-    public Path path() {
-        throw new UnsupportedOperationException("stub");
+    public byte[] get(final Namespace namespace, final Path path) {
+        if (contentMap.get(namespace).get(path) == null) {
+            throw new IllegalArgumentException("path <[" + path + "]> does not exist");
+        }
+        return contentMap.get(namespace).get(path);
     }
 
     @Override
-    public byte[] sha256() {
-        throw new UnsupportedOperationException("stub");
-    }
-
-    @Override
-    public Ristretto255.RistrettoPoint point() {
-        throw new UnsupportedOperationException("stub");
-    }
-
-    @Override
-    public RowKey rowKey() {
-        throw new UnsupportedOperationException("stub");
-    }
-
-    @Override
-    public byte[] asBytes() {
-        throw new UnsupportedOperationException("stub");
-    }
-
-    @Override
-    public boolean isStub() {
-        return isStub;
+    public void delete(final Namespace namespace, final Path path) {
+        if (!contentMap.get(namespace).containsKey(path)) {
+            throw new IllegalArgumentException("path <" + path + "> does not exist");
+        }
+        contentMap.get(namespace).remove(path);
     }
 
 }

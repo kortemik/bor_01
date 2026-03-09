@@ -43,9 +43,35 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.metadata;
+package com.teragrep.bor_01.tree;
 
-public interface Namespace {
+import com.goterl.lazysodium.exceptions.SodiumException;
+import com.goterl.lazysodium.interfaces.Ristretto255;
+import com.teragrep.bor_01.Stubable;
 
-    public abstract String name();
+import java.time.Instant;
+import java.util.NavigableMap;
+
+public interface MerkleTree extends Stubable {
+
+    void addMetadataPoint(Instant epochHour, Ristretto255.RistrettoPoint point) throws SodiumException;
+
+    Ristretto255.RistrettoPoint root() throws SodiumException;
+
+    NavigableMap<Instant, Ristretto255.RistrettoPoint> years() throws SodiumException;
+
+    NavigableMap<Instant, Ristretto255.RistrettoPoint> days(Instant epochYearStart) throws SodiumException;
+
+    NavigableMap<Instant, Ristretto255.RistrettoPoint> hours(Instant epochDayStart) throws SodiumException;
+
+    /*
+    List<Ristretto255.RistrettoPoint> years();
+    List<Ristretto255.RistrettoPoint> months(Instant year);
+    List<Ristretto255.RistrettoPoint> days(Instant month);
+    List<Ristretto255.RistrettoPoint> hours(Instant day);
+    
+    void addToHour(Instant hour, Ristretto255.RistrettoPoint point);
+    void removeFromHour(Instant hour, Ristretto255.RistrettoPoint point);
+    
+     */
 }

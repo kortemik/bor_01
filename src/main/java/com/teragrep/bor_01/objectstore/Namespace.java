@@ -43,13 +43,9 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.metadata;
+package com.teragrep.bor_01.objectstore;
 
-public interface Store {
+public interface Namespace {
 
-    public abstract void put(Metadata metadata);
-
-    public abstract Metadata get(RowKey rowKey);
-
-    public abstract void delete(RowKey rowKey);
+    public abstract String name();
 }

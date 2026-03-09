@@ -45,15 +45,53 @@
  */
 package com.teragrep.bor_01.tree;
 
+import com.goterl.lazysodium.exceptions.SodiumException;
 import com.goterl.lazysodium.interfaces.Ristretto255;
 
-import java.util.List;
+import java.time.Instant;
+import java.util.NavigableMap;
 
-public interface MerkleRangeTree {
+public class MerkeTreeStub implements MerkleTree {
 
-    List<Ristretto255.RistrettoPoint> level(long depth);
+    private final boolean isStub;
 
-    MerkleRangeTree leafAdd(long epochHour, Ristretto255.RistrettoPoint point);
+    public MerkeTreeStub() {
+        this(true);
+    }
 
-    MerkleRangeTree leafRemove(long epochHour, Ristretto255.RistrettoPoint point);
+    private MerkeTreeStub(boolean isStub) {
+        this.isStub = isStub;
+    }
+
+    @Override
+    public boolean isStub() {
+        return isStub;
+    }
+
+    @Override
+    public void addMetadataPoint(final Instant epochHour, final Ristretto255.RistrettoPoint point) {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public Ristretto255.RistrettoPoint root() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public NavigableMap<Instant, Ristretto255.RistrettoPoint> years() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public NavigableMap<Instant, Ristretto255.RistrettoPoint> days(final Instant epochYearStart)
+            throws SodiumException {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    @Override
+    public NavigableMap<Instant, Ristretto255.RistrettoPoint> hours(final Instant epochDayStart)
+            throws SodiumException {
+        throw new UnsupportedOperationException("stub");
+    }
 }

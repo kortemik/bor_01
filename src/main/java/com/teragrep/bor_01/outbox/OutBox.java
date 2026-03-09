@@ -45,10 +45,14 @@
  */
 package com.teragrep.bor_01.outbox;
 
+import com.goterl.lazysodium.exceptions.SodiumException;
+import com.teragrep.bor_01.metadata.Index;
 import com.teragrep.bor_01.metadata.Metadata;
-import com.teragrep.bor_01.tree.MerkleRangeTree;
+import com.teragrep.bor_01.tree.MerkleTree;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 
 public interface OutBox {
 
@@ -56,11 +60,16 @@ public interface OutBox {
 
     public abstract void objectStored(Metadata metadata);
 
-    public abstract void metadataStored(Metadata metadata);
+    public abstract void metadataStored(Metadata metadata) throws SodiumException, NoSuchAlgorithmException;
 
     public abstract List<Metadata> pendingObjectStore();
 
     public abstract List<Metadata> pendingMetadataStore();
 
-    public abstract MerkleRangeTree tree();
+    public abstract MerkleTree tree(Index index);
+
+    public abstract Map<Index, MerkleTree> trees();
+
+    public abstract void addIndex(Index index);
+
 }

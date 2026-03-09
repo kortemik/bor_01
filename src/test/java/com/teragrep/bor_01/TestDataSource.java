@@ -50,6 +50,8 @@ import com.teragrep.bor_01.id.AllocationImpl;
 import com.teragrep.bor_01.metadata.*;
 import com.teragrep.bor_01.object.Context;
 import com.teragrep.bor_01.object.ContextImpl;
+import com.teragrep.bor_01.objectstore.Namespace;
+import com.teragrep.bor_01.objectstore.NamespaceFake;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -72,7 +74,7 @@ public final class TestDataSource implements Supplier<Context> {
         this.index = new IndexFake();
         this.site = new SiteFake();
         this.allocation = new AllocationImpl();
-        this.namespace = new NamespaceFake();
+        this.namespace = new NamespaceFake("year-store");
         this.testContentPrefix = "test data at Instant.now() -> ";
 
     }

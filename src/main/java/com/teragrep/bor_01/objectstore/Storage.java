@@ -45,8 +45,6 @@
  */
 package com.teragrep.bor_01.objectstore;
 
-import com.teragrep.bor_01.metadata.Namespace;
-
 import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;

@@ -49,16 +49,16 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class StoreImpl implements Store {
+public class MetadataStorageImpl implements MetadataStorage {
 
     private final Map<ByteBuffer, Metadata> store;
     private final Metadata metadataStub;
 
-    public StoreImpl() {
+    public MetadataStorageImpl() {
         this(new TreeMap<>(), new MetadataStub());
     }
 
-    private StoreImpl(Map<ByteBuffer, Metadata> store, Metadata metadataStub) {
+    private MetadataStorageImpl(Map<ByteBuffer, Metadata> store, Metadata metadataStub) {
         this.store = store;
         this.metadataStub = metadataStub;
     }

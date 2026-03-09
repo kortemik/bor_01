@@ -49,6 +49,7 @@ import com.goterl.lazysodium.exceptions.SodiumException;
 import com.goterl.lazysodium.interfaces.Ristretto255;
 import com.teragrep.bor_01.Stubable;
 import com.teragrep.bor_01.id.Id;
+import com.teragrep.bor_01.objectstore.Namespace;
 
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
