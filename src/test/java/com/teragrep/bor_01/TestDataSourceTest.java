@@ -152,6 +152,10 @@ public class TestDataSourceTest {
         System.out.println("afterSyncDiffResult: " + afterSyncDiffResult);
 
         Assertions.assertEquals(0, afterSyncDiffResult.size());
+
+        // todo handle expiration, atm objects are removed once in a day, so perhaps mark as tombstone and skip from point calculation
+
+        // todo handle issue where diffResult returns metadata that is in transit
     }
 
 }
