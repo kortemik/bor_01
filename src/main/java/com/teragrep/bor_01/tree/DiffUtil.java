@@ -49,6 +49,8 @@ import com.goterl.lazysodium.exceptions.SodiumException;
 import com.goterl.lazysodium.interfaces.Ristretto255;
 import com.teragrep.bor_01.metadata.Index;
 import com.teragrep.bor_01.outbox.OutBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.LinkedList;
@@ -57,6 +59,8 @@ import java.util.NavigableMap;
 import java.util.Queue;
 
 public class DiffUtil {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiffUtil.class);
 
     public static class DiffResult {
 
@@ -83,85 +87,89 @@ public class DiffUtil {
 
     }
 
-    public static Queue<DiffResult> compareTrees(OutBox outBoxA, OutBox outBoxB) throws SodiumException {
+    public static Queue<DiffResult> compareTrees(OutBox remoteOutBox, OutBox localOutBox) throws SodiumException {
         // this is some nice little diff tree that drills down root->year->day->hour and feeds this queue
+        LOGGER.debug("starting compareTrees");
 
         Queue<DiffResult> modifiedHourStarts = new LinkedList<>();
 
-        Map<Index, MerkleTree> siteATrees = outBoxA.trees();
+        Map<Index, MerkleTree> remoteSiteTrees = remoteOutBox.trees();
 
-        for (Map.Entry<Index, MerkleTree> siteAIndex2TreeEntry : siteATrees.entrySet()) {
+        for (Map.Entry<Index, MerkleTree> remoteSiteIndex2TreeEntry : remoteSiteTrees.entrySet()) {
+            LOGGER.debug("comparing index <{}>", remoteSiteIndex2TreeEntry.getKey());
 
             // add index if missing
-            if (!outBoxB.trees().containsKey(siteAIndex2TreeEntry.getKey())) {
-                outBoxB.addIndex(siteAIndex2TreeEntry.getKey());
+            if (!localOutBox.trees().containsKey(remoteSiteIndex2TreeEntry.getKey())) {
+                localOutBox.addIndex(remoteSiteIndex2TreeEntry.getKey());
             }
 
-            MerkleTree siteBTree = outBoxB.trees().get(siteAIndex2TreeEntry.getKey());
+            MerkleTree localSiteTree = localOutBox.trees().get(remoteSiteIndex2TreeEntry.getKey());
 
-            if (!siteBTree.root().equals(siteAIndex2TreeEntry.getValue().root())) {
+            if (!localSiteTree.root().equals(remoteSiteIndex2TreeEntry.getValue().root())) {
+                LOGGER
+                        .info(
+                                "roots differ remoteSite <{}> localSite <{}>",
+                                remoteSiteIndex2TreeEntry.getValue().root(), localSiteTree.root()
+                        );
 
                 // find out changed years
-                NavigableMap<Instant, Ristretto255.RistrettoPoint> siteAYear2PointMap = siteAIndex2TreeEntry
+                NavigableMap<Instant, Ristretto255.RistrettoPoint> remoteSiteYear2PointMap = remoteSiteIndex2TreeEntry
                         .getValue()
                         .years();
-                NavigableMap<Instant, Ristretto255.RistrettoPoint> siteBYear2PointMap = siteBTree.years();
+                NavigableMap<Instant, Ristretto255.RistrettoPoint> localSiteYear2PointMap = localSiteTree.years();
 
                 for (
-                    Map.Entry<Instant, Ristretto255.RistrettoPoint> siteAYear2PointEntry : siteAYear2PointMap.entrySet()
+                    Map.Entry<Instant, Ristretto255.RistrettoPoint> remoteSiteYear2PointEntry : remoteSiteYear2PointMap
+                            .entrySet()
                 ) {
 
                     if (
-                        !siteBYear2PointMap.containsKey(siteAYear2PointEntry.getKey()) || siteBYear2PointMap
-                                .get(siteAYear2PointEntry.getKey())
-                                .equals(siteAYear2PointEntry.getValue())
+                        !localSiteYear2PointMap.containsKey(remoteSiteYear2PointEntry.getKey())
+                                || !localSiteYear2PointMap.get(remoteSiteYear2PointEntry.getKey()).equals(remoteSiteYear2PointEntry.getValue())
                     ) {
                         // year is modified
-
-                        for (Instant siteAyearStart : siteAYear2PointMap.keySet()) {
-                            NavigableMap<Instant, Ristretto255.RistrettoPoint> siteADay2PointMap = siteAIndex2TreeEntry
+                        LOGGER.debug("year <{}> differs", remoteSiteYear2PointEntry.getKey());
+                        for (Instant remoteSiteyearStart : remoteSiteYear2PointMap.keySet()) {
+                            NavigableMap<Instant, Ristretto255.RistrettoPoint> remoteSiteDay2PointMap = remoteSiteIndex2TreeEntry
                                     .getValue()
-                                    .days(siteAyearStart);
-                            NavigableMap<Instant, Ristretto255.RistrettoPoint> siteBDay2PointMap = siteBTree
-                                    .days(siteAyearStart);
+                                    .days(remoteSiteyearStart);
+                            NavigableMap<Instant, Ristretto255.RistrettoPoint> localSiteDay2PointMap = localSiteTree
+                                    .days(remoteSiteyearStart);
 
                             for (
-                                Map.Entry<Instant, Ristretto255.RistrettoPoint> siteADay2PointEntry : siteADay2PointMap
+                                Map.Entry<Instant, Ristretto255.RistrettoPoint> remoteSiteDay2PointEntry : remoteSiteDay2PointMap
                                         .entrySet()
                             ) {
                                 if (
-                                    !siteBDay2PointMap.containsKey(siteADay2PointEntry.getKey()) || siteBDay2PointMap
-                                            .get(siteADay2PointEntry.getKey())
-                                            .equals(siteADay2PointEntry.getValue())
+                                    !localSiteDay2PointMap.containsKey(remoteSiteDay2PointEntry.getKey())
+                                            || !localSiteDay2PointMap.get(remoteSiteDay2PointEntry.getKey()).equals(remoteSiteDay2PointEntry.getValue())
                                 ) {
                                     // day is modified
 
-                                    for (Instant siteAdayStart : siteADay2PointMap.keySet()) {
+                                    for (Instant remoteSitedayStart : remoteSiteDay2PointMap.keySet()) {
 
-                                        NavigableMap<Instant, Ristretto255.RistrettoPoint> siteAHour2PointMap = siteAIndex2TreeEntry
+                                        NavigableMap<Instant, Ristretto255.RistrettoPoint> remoteSiteHour2PointMap = remoteSiteIndex2TreeEntry
                                                 .getValue()
-                                                .hours(siteAdayStart);
-                                        NavigableMap<Instant, Ristretto255.RistrettoPoint> siteBHour2PointMap = siteBTree
-                                                .hours(siteAdayStart);
+                                                .hours(remoteSitedayStart);
+                                        NavigableMap<Instant, Ristretto255.RistrettoPoint> localSiteHour2PointMap = localSiteTree
+                                                .hours(remoteSitedayStart);
 
                                         for (
-                                            Map.Entry<Instant, Ristretto255.RistrettoPoint> siteAHourEntry : siteAHour2PointMap
+                                            Map.Entry<Instant, Ristretto255.RistrettoPoint> remoteSiteHourEntry : remoteSiteHour2PointMap
                                                     .entrySet()
                                         ) {
 
                                             if (
-                                                !siteBDay2PointMap
-                                                        .containsKey(siteAHourEntry.getKey()) || siteBHour2PointMap
-                                                                .get(siteAHourEntry.getKey())
-                                                                .equals(siteAHourEntry.getValue())
+                                                !localSiteDay2PointMap.containsKey(remoteSiteHourEntry.getKey())
+                                                        || !localSiteHour2PointMap.get(remoteSiteHourEntry.getKey()).equals(remoteSiteHourEntry.getValue())
                                             ) {
                                                 // hour is modified and needs a pull
                                                 // todo range pull i.e. 255 sub-ranges for the day
                                                 modifiedHourStarts
                                                         .add(
                                                                 new DiffResult(
-                                                                        siteAIndex2TreeEntry.getKey(),
-                                                                        siteAHourEntry.getKey()
+                                                                        remoteSiteIndex2TreeEntry.getKey(),
+                                                                        remoteSiteHourEntry.getKey()
                                                                 )
                                                         );
                                             }

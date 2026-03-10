@@ -212,7 +212,7 @@ public class TestDataSourceTest {
                         Queue<DiffUtil.DiffResult> modifiedHourStarts = DiffUtil
                                 .compareTrees(remoteOutBox, localOutBox);
 
-                        LOGGER.debug("siteName <{}> modifiedHourStarts size <{}>", siteName, modifiedHourStarts.size());
+                        LOGGER.info("siteName <{}> modifiedHourStarts size <{}>", siteName, modifiedHourStarts.size());
 
                         while (!modifiedHourStarts.isEmpty()) {
                             DiffUtil.DiffResult diffResult = modifiedHourStarts.poll();
@@ -222,10 +222,19 @@ public class TestDataSourceTest {
                                     .get(diffResult.index(), diffResult.instant());
                             LOGGER.debug("downloadManifest <{}>", downloadManifest);
 
-                            // TODO DO CROSS CHECK IF WE ALREADY HAVE SOME OF THE SET
+                            // ++ TODO DO CROSS CHECK IF WE ALREADY HAVE SOME OF THE SET
+
+                            Set<Metadata> downloadedSet = new HashSet<>(downloadManifest);
+
+                            List<Metadata> localManifest = localMetadataStorage
+                                    .get(diffResult.index(), diffResult.instant());
+                            Set<Metadata> localSet = new HashSet<>(localManifest);
+
+                            downloadedSet.removeAll(localSet);
+                            // --
 
                             // download stuff
-                            for (Metadata metadataIn : downloadManifest) {
+                            for (Metadata metadataIn : downloadedSet) {
                                 // download to site B, perhaps mark as sync or so in the outbox while doing so or use some work scheduling
                                 LOGGER.debug("about to download <{}>", metadataIn);
                                 byte[] contentIn = remoteStorage.get(metadataIn.namespace(), metadataIn.path());
@@ -262,6 +271,7 @@ public class TestDataSourceTest {
                     catch (InterruptedException ignored) {
 
                     }
+                    LOGGER.info("rerunning sync loop");
                 }
                 LOGGER.info("exiting at thread <{}>", Thread.currentThread().getName());
             }
