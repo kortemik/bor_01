@@ -55,7 +55,6 @@ import java.time.Duration;
 import java.time.Instant;
 
 import com.goterl.lazysodium.LazySodiumJava;
-import com.goterl.lazysodium.SodiumJava;
 import com.goterl.lazysodium.exceptions.SodiumException;
 import com.teragrep.bor_01.objectstore.Namespace;
 
@@ -65,6 +64,7 @@ import java.util.Base64;
 
 public class MetadataImpl implements Metadata {
 
+    private final LazySodiumJava lazySodiumJava;
     private final Index index;
     private final Site site;
     private final Id id;
@@ -75,6 +75,7 @@ public class MetadataImpl implements Metadata {
     private final byte[] sha256;
 
     public MetadataImpl(
+            LazySodiumJava lazySodiumJava,
             Index index,
             Site site,
             Id id,
@@ -84,6 +85,7 @@ public class MetadataImpl implements Metadata {
             Path path,
             byte[] sha256
     ) {
+        this.lazySodiumJava = lazySodiumJava;
         this.index = index;
         this.site = site;
         this.id = id;
@@ -140,9 +142,7 @@ public class MetadataImpl implements Metadata {
         MessageDigest md512 = MessageDigest.getInstance("SHA-512");
         byte[] metadataSha512 = md512.digest(asBytes());
 
-        LazySodiumJava ls = new LazySodiumJava(new SodiumJava());
-
-        return ls.cryptoCoreRistretto255FromHash(metadataSha512);
+        return lazySodiumJava.cryptoCoreRistretto255FromHash(metadataSha512);
     }
 
     @Override

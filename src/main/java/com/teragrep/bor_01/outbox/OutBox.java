@@ -70,6 +70,6 @@ public interface OutBox {
 
     public abstract Map<Index, MerkleTree> trees();
 
-    public abstract void addIndex(Index index);
+    public abstract void addIndex(Index index) throws SodiumException;
 
 }

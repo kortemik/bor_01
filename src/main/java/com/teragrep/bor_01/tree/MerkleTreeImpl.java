@@ -56,18 +56,21 @@ import java.util.*;
 public class MerkleTreeImpl implements MerkleTree {
 
     private final LazySodiumJava lazySodiumJava;
+    private final Ristretto255.RistrettoPoint basePoint;
     private final NavigableMap<Instant, Ristretto255.RistrettoPoint> hourPointMap;
 
-    public MerkleTreeImpl(LazySodiumJava lazySodiumJava) {
-        this(lazySodiumJava, new TreeMap<>());
+    public MerkleTreeImpl(LazySodiumJava lazySodiumJava, Ristretto255.RistrettoPoint basePoint) {
+        this(lazySodiumJava, basePoint, new TreeMap<>());
     }
 
     public MerkleTreeImpl(
             LazySodiumJava lazySodiumJava,
+            Ristretto255.RistrettoPoint basePoint,
             NavigableMap<Instant, Ristretto255.RistrettoPoint> hourPointMap
     ) {
-        this.hourPointMap = hourPointMap;
         this.lazySodiumJava = lazySodiumJava;
+        this.basePoint = basePoint;
+        this.hourPointMap = hourPointMap;
     }
 
     @Override
@@ -79,7 +82,7 @@ public class MerkleTreeImpl implements MerkleTree {
     public synchronized void addMetadataPoint(final Instant epochHour, final Ristretto255.RistrettoPoint point)
             throws SodiumException {
         if (!hourPointMap.containsKey(epochHour)) {
-            hourPointMap.put(epochHour, Ristretto255.RistrettoPoint.base(lazySodiumJava));
+            hourPointMap.put(epochHour, basePoint);
         }
 
         Ristretto255.RistrettoPoint pointFromTree = hourPointMap.get(epochHour);
@@ -94,7 +97,7 @@ public class MerkleTreeImpl implements MerkleTree {
 
         NavigableMap<Instant, Ristretto255.RistrettoPoint> yearPointMap = years();
 
-        Ristretto255.RistrettoPoint root = Ristretto255.RistrettoPoint.base(lazySodiumJava);
+        Ristretto255.RistrettoPoint root = basePoint;
 
         for (Ristretto255.RistrettoPoint yearPoint : yearPointMap.values()) {
             root = root.plus(yearPoint);
@@ -112,7 +115,7 @@ public class MerkleTreeImpl implements MerkleTree {
             Instant epochYear = Instant.ofEpochSecond(epochYearLong);
 
             if (!yearPointMap.containsKey(epochYear)) {
-                yearPointMap.put(epochYear, Ristretto255.RistrettoPoint.base(lazySodiumJava));
+                yearPointMap.put(epochYear, basePoint);
             }
 
             Ristretto255.RistrettoPoint newYearPoint = yearPointMap.get(epochYear).plus(hourEntry.getValue());
@@ -138,7 +141,7 @@ public class MerkleTreeImpl implements MerkleTree {
             Instant epochDay = Instant.ofEpochSecond(epochDayLong);
 
             if (!dayPointMap.containsKey(epochDay)) {
-                dayPointMap.put(epochDay, Ristretto255.RistrettoPoint.base(lazySodiumJava));
+                dayPointMap.put(epochDay, basePoint);
             }
 
             Ristretto255.RistrettoPoint newDayPoint = dayPointMap.get(epochDay).plus(hourEntry.getValue());

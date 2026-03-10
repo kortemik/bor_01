@@ -47,6 +47,7 @@ package com.teragrep.bor_01.outbox;
 
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.exceptions.SodiumException;
+import com.goterl.lazysodium.interfaces.Ristretto255;
 import com.teragrep.bor_01.id.Id;
 import com.teragrep.bor_01.metadata.Index;
 import com.teragrep.bor_01.metadata.Metadata;
@@ -118,7 +119,8 @@ public class OutBoxImpl implements OutBox {
         Metadata metadata1 = storedObjects.remove(metadata.id());
 
         if (!merkleRangeTrees.containsKey(metadata1.index())) {
-            merkleRangeTrees.put(metadata1.index(), new MerkleTreeImpl(lazySodiumJava));
+            Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(lazySodiumJava);
+            merkleRangeTrees.put(metadata1.index(), new MerkleTreeImpl(lazySodiumJava, basePoint));
         }
 
         merkleRangeTrees.get(metadata1.index()).addMetadataPoint(metadata1.epochHour(), metadata1.point());
@@ -152,8 +154,9 @@ public class OutBoxImpl implements OutBox {
     }
 
     @Override
-    public void addIndex(final Index index) {
-        merkleRangeTrees.put(index, new MerkleTreeImpl(lazySodiumJava));
+    public void addIndex(final Index index) throws SodiumException {
+        Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(lazySodiumJava);
+        merkleRangeTrees.put(index, new MerkleTreeImpl(lazySodiumJava, basePoint));
     }
 
 }

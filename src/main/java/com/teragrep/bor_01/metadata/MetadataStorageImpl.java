@@ -120,18 +120,20 @@ public class MetadataStorageImpl implements MetadataStorage {
 
     @Override
     public int size() {
-        Map<String, Long> siteToCount = new HashMap<>();
-        for (Metadata metadata : store.values()) {
-            if (!siteToCount.containsKey(metadata.site().name())) {
-                siteToCount.put(metadata.site().name(), 0L);
+        if (LOGGER.isDebugEnabled()) {
+            Map<String, Long> siteToCount = new HashMap<>();
+            for (Metadata metadata : store.values()) {
+                if (!siteToCount.containsKey(metadata.site().name())) {
+                    siteToCount.put(metadata.site().name(), 0L);
+                }
+
+                long count = siteToCount.get(metadata.site().name());
+                count++;
+                siteToCount.put(metadata.site().name(), count);
             }
 
-            long count = siteToCount.get(metadata.site().name());
-            count++;
-            siteToCount.put(metadata.site().name(), count);
+            LOGGER.debug("siteName <{}> siteToCount <{}>", siteName, siteToCount);
         }
-
-        LOGGER.info("siteName <{}> siteToCount <{}>", siteName, siteToCount);
         return store.size();
     }
 

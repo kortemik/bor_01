@@ -45,6 +45,7 @@
  */
 package com.teragrep.bor_01;
 
+import com.goterl.lazysodium.LazySodiumJava;
 import com.teragrep.bor_01.id.Allocation;
 import com.teragrep.bor_01.id.AllocationImpl;
 import com.teragrep.bor_01.metadata.*;
@@ -65,13 +66,15 @@ import java.util.function.Supplier;
 
 public final class TestDataSource implements Supplier<Context> {
 
+    private final LazySodiumJava lazySodiumJava;
     private final Index index;
     private final Site site;
     private final Allocation allocation;
     private final Namespace namespace;
     private final String testContentPrefix;
 
-    public TestDataSource(int siteId, String siteName) {
+    public TestDataSource(LazySodiumJava lazySodiumJava, int siteId, String siteName) {
+        this.lazySodiumJava = lazySodiumJava;
         this.index = new IndexFake();
         this.site = new SiteFake(siteId, siteName);
         this.allocation = new AllocationImpl();
@@ -104,6 +107,7 @@ public final class TestDataSource implements Supplier<Context> {
         Instant epochHour = Instant.ofEpochSecond(epochHourLong);
 
         Metadata metadata = new MetadataImpl(
+                lazySodiumJava,
                 index,
                 site,
                 allocation.get(),

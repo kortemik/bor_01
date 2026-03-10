@@ -142,7 +142,7 @@ public class TestDataSourceTest {
                     }
 
                     try {
-                        Thread.sleep(200L);
+                        Thread.sleep(20L);
                     }
                     catch (InterruptedException ignored) {
 
@@ -212,7 +212,7 @@ public class TestDataSourceTest {
                         Queue<DiffUtil.DiffResult> modifiedHourStarts = DiffUtil
                                 .compareTrees(remoteOutBox, localOutBox);
 
-                        LOGGER.info("siteName <{}> modifiedHourStarts size <{}>", siteName, modifiedHourStarts.size());
+                        LOGGER.debug("siteName <{}> modifiedHourStarts size <{}>", siteName, modifiedHourStarts.size());
 
                         while (!modifiedHourStarts.isEmpty()) {
                             DiffUtil.DiffResult diffResult = modifiedHourStarts.poll();
@@ -262,7 +262,7 @@ public class TestDataSourceTest {
                             }
                         }
 
-                        LOGGER.info("siteName <{}> metadataStorage.size <{}>", siteName, localMetadataStorage.size());
+                        LOGGER.debug("siteName <{}> metadataStorage.size <{}>", siteName, localMetadataStorage.size());
 
                         Thread.sleep(5000L);
                     }
@@ -273,7 +273,7 @@ public class TestDataSourceTest {
                     catch (InterruptedException ignored) {
 
                     }
-                    LOGGER.info("rerunning sync loop");
+                    LOGGER.debug("rerunning sync loop");
                 }
                 LOGGER.info("exiting at thread <{}>", Thread.currentThread().getName());
             }
@@ -294,7 +294,7 @@ public class TestDataSourceTest {
         LazySodiumJava lazySodiumJava = new LazySodiumJava(new SodiumJava());
 
         // site A
-        TestDataSource testDataSourceA = new TestDataSource(0, "site-a");
+        TestDataSource testDataSourceA = new TestDataSource(lazySodiumJava, 0, "site-a");
 
         OutBox outBoxA = new OutBoxImpl(lazySodiumJava);
 
@@ -306,7 +306,7 @@ public class TestDataSourceTest {
 
         // site B
 
-        TestDataSource testDataSourceB = new TestDataSource(1, "site-b");
+        TestDataSource testDataSourceB = new TestDataSource(lazySodiumJava, 1, "site-b");
 
         OutBox outBoxB = new OutBoxImpl(lazySodiumJava);
 
