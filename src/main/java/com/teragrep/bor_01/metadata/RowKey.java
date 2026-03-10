@@ -45,8 +45,8 @@
  */
 package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.Stubable;
 import com.teragrep.bor_01.id.Id;
+import com.teragrep.stb_01.Stubable;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;

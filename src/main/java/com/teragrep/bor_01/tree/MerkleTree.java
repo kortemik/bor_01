@@ -47,7 +47,7 @@ package com.teragrep.bor_01.tree;
 
 import com.goterl.lazysodium.exceptions.SodiumException;
 import com.goterl.lazysodium.interfaces.Ristretto255;
-import com.teragrep.bor_01.Stubable;
+import com.teragrep.stb_01.Stubable;
 
 import java.time.Instant;
 import java.util.NavigableMap;
