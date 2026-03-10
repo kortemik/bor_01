@@ -58,4 +58,6 @@ public interface MetadataStorage {
 
     List<Metadata> get(Index index, Instant epochHourStart);
 
+    int size();
+
 }

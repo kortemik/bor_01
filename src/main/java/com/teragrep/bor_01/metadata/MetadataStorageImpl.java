@@ -56,14 +56,16 @@ public class MetadataStorageImpl implements MetadataStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataStorageImpl.class);
 
+    private final String siteName;
     private final Map<ByteBuffer, Metadata> store;
     private final Metadata metadataStub;
 
-    public MetadataStorageImpl() {
-        this(new TreeMap<>(), new MetadataStub());
+    public MetadataStorageImpl(String siteName) {
+        this(siteName, new TreeMap<>(), new MetadataStub());
     }
 
-    private MetadataStorageImpl(Map<ByteBuffer, Metadata> store, Metadata metadataStub) {
+    private MetadataStorageImpl(String siteName, Map<ByteBuffer, Metadata> store, Metadata metadataStub) {
+        this.siteName = siteName;
         this.store = store;
         this.metadataStub = metadataStub;
     }
@@ -114,6 +116,23 @@ public class MetadataStorageImpl implements MetadataStorage {
             }
         }
         return result;
+    }
+
+    @Override
+    public int size() {
+        Map<String, Long> siteToCount = new HashMap<>();
+        for (Metadata metadata : store.values()) {
+            if (!siteToCount.containsKey(metadata.site().name())) {
+                siteToCount.put(metadata.site().name(), 0L);
+            }
+
+            long count = siteToCount.get(metadata.site().name());
+            count++;
+            siteToCount.put(metadata.site().name(), count);
+        }
+
+        LOGGER.info("siteName <{}> siteToCount <{}>", siteName, siteToCount);
+        return store.size();
     }
 
 }

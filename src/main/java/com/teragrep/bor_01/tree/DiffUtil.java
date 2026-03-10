@@ -107,7 +107,7 @@ public class DiffUtil {
 
             if (!localSiteTree.root().equals(remoteSiteIndex2TreeEntry.getValue().root())) {
                 LOGGER
-                        .info(
+                        .debug(
                                 "roots differ remoteSite <{}> localSite <{}>",
                                 remoteSiteIndex2TreeEntry.getValue().root(), localSiteTree.root()
                         );

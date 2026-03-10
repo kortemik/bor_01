@@ -142,7 +142,7 @@ public class TestDataSourceTest {
                     }
 
                     try {
-                        Thread.sleep(1000L);
+                        Thread.sleep(200L);
                     }
                     catch (InterruptedException ignored) {
 
@@ -262,6 +262,8 @@ public class TestDataSourceTest {
                             }
                         }
 
+                        LOGGER.info("siteName <{}> metadataStorage.size <{}>", siteName, localMetadataStorage.size());
+
                         Thread.sleep(5000L);
                     }
                     catch (SodiumException | NoSuchAlgorithmException e) {
@@ -298,7 +300,7 @@ public class TestDataSourceTest {
 
         Storage storageA = new StorageImpl(new URL("https://localhost:8123/s3"), durationMap);
 
-        MetadataStorage metadataStorageA = new MetadataStorageImpl();
+        MetadataStorage metadataStorageA = new MetadataStorageImpl("siteA");
 
         Datacenter datacenterA = new Datacenter("siteA", outBoxA, storageA, metadataStorageA, testDataSourceA);
 
@@ -310,7 +312,7 @@ public class TestDataSourceTest {
 
         Storage storageB = new StorageImpl(new URL("https://localhost:8080/s3"), durationMap);
 
-        MetadataStorage metadataStorageB = new MetadataStorageImpl();
+        MetadataStorage metadataStorageB = new MetadataStorageImpl("siteB");
 
         Datacenter datacenterB = new Datacenter("siteB", outBoxB, storageB, metadataStorageB, testDataSourceB);
 
