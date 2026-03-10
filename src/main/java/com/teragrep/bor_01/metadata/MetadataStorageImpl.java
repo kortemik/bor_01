@@ -79,7 +79,7 @@ public class MetadataStorageImpl implements MetadataStorage {
 
         store.put(rowKeyByteBuffer, metadata);
         LOGGER.debug("stored metadata <[{}]>", metadata);
-        LOGGER.info("metadata storage size <{}>", store.size());
+        LOGGER.debug("metadata storage size <{}>", store.size());
     }
 
     @Override

@@ -160,7 +160,7 @@ public class DiffUtil {
                                         ) {
 
                                             if (
-                                                !localSiteDay2PointMap.containsKey(remoteSiteHourEntry.getKey())
+                                                !localSiteHour2PointMap.containsKey(remoteSiteHourEntry.getKey())
                                                         || !localSiteHour2PointMap.get(remoteSiteHourEntry.getKey()).equals(remoteSiteHourEntry.getValue())
                                             ) {
                                                 // hour is modified and needs a pull

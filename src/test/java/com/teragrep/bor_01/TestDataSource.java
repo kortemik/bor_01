@@ -60,6 +60,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 public final class TestDataSource implements Supplier<Context> {
@@ -81,7 +82,9 @@ public final class TestDataSource implements Supplier<Context> {
 
     @Override
     public Context get() {
-        String content = testContentPrefix + Instant.now();
+        long randomNum = ThreadLocalRandom.current().nextLong(0, Instant.now().getEpochSecond());
+        Instant now = Instant.ofEpochSecond(0).plusSeconds(randomNum);
+        String content = testContentPrefix + now;
         byte[] contentBytes = content.getBytes(StandardCharsets.UTF_8);
 
         // reusing same digest instance and .reset() it is preferred way
@@ -97,8 +100,7 @@ public final class TestDataSource implements Supplier<Context> {
 
         String path = "/some/random/path/" + UUID.randomUUID();
 
-        Instant instant = Instant.now();
-        long epochHourLong = instant.getEpochSecond() - instant.getEpochSecond() % 3600;
+        long epochHourLong = now.getEpochSecond() - now.getEpochSecond() % 3600;
         Instant epochHour = Instant.ofEpochSecond(epochHourLong);
 
         Metadata metadata = new MetadataImpl(
