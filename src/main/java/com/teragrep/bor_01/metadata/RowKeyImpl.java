@@ -99,4 +99,9 @@ public class RowKeyImpl implements RowKey {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "RowKeyImpl{" + "index=" + index + ", epochHour=" + epochHour + ", id=" + id + ", site=" + site + '}';
+    }
+
 }

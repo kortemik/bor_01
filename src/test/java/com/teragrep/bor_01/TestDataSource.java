@@ -70,9 +70,9 @@ public final class TestDataSource implements Supplier<Context> {
     private final Namespace namespace;
     private final String testContentPrefix;
 
-    public TestDataSource() {
+    public TestDataSource(int siteId, String siteName) {
         this.index = new IndexFake();
-        this.site = new SiteFake();
+        this.site = new SiteFake(siteId, siteName);
         this.allocation = new AllocationImpl();
         this.namespace = new NamespaceFake("year-store");
         this.testContentPrefix = "test data at Instant.now() -> ";

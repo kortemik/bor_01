@@ -45,11 +45,16 @@
  */
 package com.teragrep.bor_01.metadata;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.*;
 
 public class MetadataStorageImpl implements MetadataStorage {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetadataStorageImpl.class);
 
     private final Map<ByteBuffer, Metadata> store;
     private final Metadata metadataStub;
@@ -64,7 +69,8 @@ public class MetadataStorageImpl implements MetadataStorage {
     }
 
     @Override
-    public void put(final Metadata metadata) {
+    public synchronized void put(final Metadata metadata) {
+        LOGGER.debug("about to put metadata <[{}]>", metadata);
         final ByteBuffer rowKeyByteBuffer = metadata.rowKey().asBytes();
 
         if (store.containsKey(rowKeyByteBuffer)) {
@@ -72,10 +78,12 @@ public class MetadataStorageImpl implements MetadataStorage {
         }
 
         store.put(rowKeyByteBuffer, metadata);
+        LOGGER.debug("stored metadata <[{}]>", metadata);
+        LOGGER.debug("metadata storage size <{}>", store.size());
     }
 
     @Override
-    public Metadata get(final RowKey rowKey) {
+    public synchronized Metadata get(final RowKey rowKey) {
         return store.getOrDefault(rowKey.asBytes(), metadataStub);
     }
 
@@ -91,7 +99,7 @@ public class MetadataStorageImpl implements MetadataStorage {
     }
 
     @Override
-    public List<Metadata> get(Index index, Instant epochHourStart) {
+    public synchronized List<Metadata> get(Index index, Instant epochHourStart) {
         List<Metadata> result = new LinkedList<>();
 
         // todo perhaps this to RowKey itself as match(x,y)

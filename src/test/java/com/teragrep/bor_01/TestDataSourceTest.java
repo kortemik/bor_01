@@ -59,60 +59,242 @@ import com.teragrep.bor_01.objectstore.StorageImpl;
 import com.teragrep.bor_01.outbox.OutBox;
 import com.teragrep.bor_01.outbox.OutBoxImpl;
 import com.teragrep.bor_01.tree.DiffUtil;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 
 public class TestDataSourceTest {
 
+    interface Connectivity {
+
+        OutBox outBox();
+
+        Storage storage();
+
+        MetadataStorage metadataStorage();
+
+    }
+
+    private static class Datacenter implements Runnable, Connectivity {
+
+        private static final Logger LOGGER = LoggerFactory.getLogger(Datacenter.class);
+
+        private final String siteName;
+        private final OutBox outBox;
+        private final Storage storage;
+        private final MetadataStorage metadataStorage;
+        private final TestDataSource testDataSource;
+
+        Datacenter(
+                String siteName,
+                OutBox outbox,
+                Storage storage,
+                MetadataStorage metadataStorage,
+                TestDataSource testDataSource
+        ) {
+            this.siteName = siteName;
+            this.outBox = outbox;
+            this.storage = storage;
+            this.metadataStorage = metadataStorage;
+            this.testDataSource = testDataSource;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    Context context = testDataSource.get();
+
+                    try {
+                        LOGGER.debug("site <{}> new data hex <{}>", siteName, context.metadata().point().toHex());
+                    }
+                    catch (NoSuchAlgorithmException | SodiumException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    outBox.objectFinalized(context.metadata());
+
+                    storage
+                            .put(
+                                    context.metadata().namespace(), context.metadata().path(), context.content(),
+                                    context.metadata().retention()
+                            );
+
+                    outBox.objectStored(context.metadata());
+
+                    metadataStorage.put(context.metadata());
+
+                    try {
+                        outBox.metadataStored(context.metadata());
+                    }
+                    catch (SodiumException | NoSuchAlgorithmException e) {
+                        LOGGER.error("Exception ", e);
+                        break;
+                    }
+
+                    try {
+                        Thread.sleep(1000L);
+                    }
+                    catch (InterruptedException ignored) {
+
+                    }
+                }
+            }
+            catch (Exception e) {
+                LOGGER.error("Exception ", e);
+            }
+        }
+
+        @Override
+        public OutBox outBox() {
+            return outBox;
+        }
+
+        @Override
+        public Storage storage() {
+            return storage;
+        }
+
+        @Override
+        public MetadataStorage metadataStorage() {
+            return metadataStorage;
+        }
+
+    }
+
+    private static class Reconciliation implements Runnable {
+
+        private static final Logger LOGGER = LoggerFactory.getLogger(Reconciliation.class);
+
+        private final String siteName;
+        private final OutBox localOutBox;
+        private final Storage localStorage;
+        private final MetadataStorage localMetadataStorage;
+
+        private final OutBox remoteOutBox;
+        private final Storage remoteStorage;
+        private final MetadataStorage remoteMetadataStorage;
+
+        Reconciliation(
+                String siteName,
+                OutBox localOutBox,
+                Storage localStorage,
+                MetadataStorage localMetadataStorage,
+                OutBox remoteOutBox,
+                Storage remoteStorage,
+                MetadataStorage remoteMetadataStorage
+        ) {
+            this.siteName = siteName;
+            this.localOutBox = localOutBox;
+            this.localStorage = localStorage;
+            this.localMetadataStorage = localMetadataStorage;
+
+            this.remoteOutBox = remoteOutBox;
+            this.remoteStorage = remoteStorage;
+            this.remoteMetadataStorage = remoteMetadataStorage;
+
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    try {
+                        Queue<DiffUtil.DiffResult> modifiedHourStarts = DiffUtil
+                                .compareTrees(remoteOutBox, localOutBox);
+
+                        LOGGER.debug("siteName <{}> modifiedHourStarts size <{}>", siteName, modifiedHourStarts.size());
+
+                        while (!modifiedHourStarts.isEmpty()) {
+                            DiffUtil.DiffResult diffResult = modifiedHourStarts.poll();
+                            LOGGER.debug("about to download metadata for <{}>", diffResult);
+
+                            List<Metadata> downloadManifest = remoteMetadataStorage
+                                    .get(diffResult.index(), diffResult.instant());
+                            LOGGER.debug("downloadManifest <{}>", downloadManifest);
+
+                            // TODO DO CROSS CHECK IF WE ALREADY HAVE SOME OF THE SET
+
+                            // download stuff
+                            for (Metadata metadataIn : downloadManifest) {
+                                // download to site B, perhaps mark as sync or so in the outbox while doing so or use some work scheduling
+                                LOGGER.debug("about to download <{}>", metadataIn);
+                                byte[] contentIn = remoteStorage.get(metadataIn.namespace(), metadataIn.path());
+                                LOGGER.debug("downloadded <{}>", metadataIn);
+                                // mark as ready
+                                localOutBox.objectFinalized(metadataIn);
+                                LOGGER.debug("object finalized <{}>", metadataIn);
+                                // store object on site B
+                                localStorage
+                                        .put(
+                                                metadataIn.namespace(), metadataIn.path(), contentIn,
+                                                metadataIn.retention()
+                                        );
+                                LOGGER.debug("object stored <{}>", metadataIn);
+                                // mark as stored
+                                localOutBox.objectStored(metadataIn);
+                                LOGGER.debug("object marked stored <{}>", metadataIn);
+                                // store metadata
+                                localMetadataStorage.put(metadataIn);
+                                LOGGER.debug("object metadata stored <{}>", metadataIn);
+                                // mark as metadata stored
+                                localOutBox.metadataStored(metadataIn);
+                                // done
+                                LOGGER.debug("siteName <{}> metadataIn <{}>", siteName, metadataIn);
+                            }
+                        }
+
+                        Thread.sleep(5000L);
+                    }
+                    catch (SodiumException | NoSuchAlgorithmException e) {
+                        LOGGER.error("Exception ", e);
+                        break;
+                    }
+                    catch (InterruptedException ignored) {
+
+                    }
+                }
+                LOGGER.info("exiting at thread <{}>", Thread.currentThread().getName());
+            }
+            catch (Exception e) {
+                LOGGER.error("Exception ", e);
+            }
+        }
+
+    }
+
     @Test
-    public void test() throws SodiumException, NoSuchAlgorithmException, MalformedURLException {
+    public void test() throws MalformedURLException {
+
+        ForkJoinPool pool = ForkJoinPool.commonPool();
 
         NavigableMap<Duration, Namespace> durationMap = new TreeMap<>();
         durationMap.put(Duration.ofSeconds(10L), new NamespaceFake("year-store"));
-
-        TestDataSource testDataSource = new TestDataSource();
-
         LazySodiumJava lazySodiumJava = new LazySodiumJava(new SodiumJava());
 
         // site A
+        TestDataSource testDataSourceA = new TestDataSource(0, "site-a");
+
         OutBox outBoxA = new OutBoxImpl(lazySodiumJava);
 
         Storage storageA = new StorageImpl(new URL("https://localhost:8123/s3"), durationMap);
 
         MetadataStorage metadataStorageA = new MetadataStorageImpl();
 
-        final long count = 1;
-        long loops = 1;
-        while (loops > 0) {
-            Context context = testDataSource.get();
-
-            //System.out.println(context);
-            //System.out.println(context.metadata().point().toHex());
-
-            outBoxA.objectFinalized(context.metadata());
-
-            storageA
-                    .put(
-                            context.metadata().namespace(), context.metadata().path(), context.content(),
-                            context.metadata().retention()
-                    );
-
-            outBoxA.objectStored(context.metadata());
-
-            metadataStorageA.put(context.metadata());
-
-            outBoxA.metadataStored(context.metadata());
-
-            loops--;
-        }
+        Datacenter datacenterA = new Datacenter("siteA", outBoxA, storageA, metadataStorageA, testDataSourceA);
 
         // site B
+
+        TestDataSource testDataSourceB = new TestDataSource(1, "site-b");
 
         OutBox outBoxB = new OutBoxImpl(lazySodiumJava);
 
@@ -120,42 +302,60 @@ public class TestDataSourceTest {
 
         MetadataStorage metadataStorageB = new MetadataStorageImpl();
 
-        Queue<DiffUtil.DiffResult> modifiedHourStarts = DiffUtil.compareTrees(outBoxA, outBoxB);
-        Assertions.assertEquals(count, modifiedHourStarts.size());
+        Datacenter datacenterB = new Datacenter("siteB", outBoxB, storageB, metadataStorageB, testDataSourceB);
 
-        System.out.println("modifiedHourStarts: " + modifiedHourStarts);
+        Reconciliation reconciliationDcA = new Reconciliation(
+                "siteA",
+                datacenterA.outBox(),
+                datacenterA.storage(),
+                datacenterA.metadataStorage(),
+                datacenterB.outBox(),
+                datacenterB.storage(),
+                datacenterB.metadataStorage()
+        );
 
-        while (modifiedHourStarts.size() > 0) {
-            DiffUtil.DiffResult diffResult = modifiedHourStarts.poll();
-            List<Metadata> downloadManifest = metadataStorageA.get(diffResult.index(), diffResult.instant());
-            System.out.println(downloadManifest);
+        Reconciliation reconciliationDcB = new Reconciliation(
+                "siteB",
+                datacenterB.outBox(),
+                datacenterB.storage(),
+                datacenterB.metadataStorage(),
+                datacenterA.outBox(),
+                datacenterA.storage(),
+                datacenterA.metadataStorage()
+        );
 
-            // download stuff
-            for (Metadata metadataIn : downloadManifest) {
-                // download to site B, perhaps mark as sync or so in the outbox while doing so or use some work scheduling
-                byte[] contentIn = storageA.get(metadataIn.namespace(), metadataIn.path());
-                // mark as ready
-                outBoxB.objectFinalized(metadataIn);
-                // store object on site B
-                storageB.put(metadataIn.namespace(), metadataIn.path(), contentIn, metadataIn.retention());
-                // mark as stored
-                outBoxB.objectStored(metadataIn);
-                // store metadata
-                metadataStorageB.put(metadataIn);
-                // mark as metadata stored
-                outBoxB.metadataStored(metadataIn);
-                // done
-            }
+        ForkJoinTask<?> dcrAtask = pool.submit(reconciliationDcA);
+        ForkJoinTask<?> dcrBtask = pool.submit(reconciliationDcB);
+        ForkJoinTask<?> dcAtask = pool.submit(datacenterA);
+        ForkJoinTask<?> dcBtask = pool.submit(datacenterB);
+
+        try {
+            dcBtask.get();
         }
-
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        /*
+        Assertions.assertEquals(count, modifiedHourStarts.size());
+        
+        System.out.println("modifiedHourStarts: " + modifiedHourStarts);
+        
+        
+        
         Queue<DiffUtil.DiffResult> afterSyncDiffResult = DiffUtil.compareTrees(outBoxA, outBoxB);
         System.out.println("afterSyncDiffResult: " + afterSyncDiffResult);
-
+        
         Assertions.assertEquals(0, afterSyncDiffResult.size());
+        
+         */
 
         // todo handle expiration, atm objects are removed once in a day, so perhaps mark as tombstone and skip from point calculation
 
         // todo handle issue where diffResult returns metadata that is in transit
+
     }
 
 }

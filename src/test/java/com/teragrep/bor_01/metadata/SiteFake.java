@@ -50,9 +50,9 @@ public class SiteFake implements Site {
     private final int id;
     private final String name;
 
-    public SiteFake() {
-        this.id = 2;
-        this.name = "off-site";
+    public SiteFake(int id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
     @Override
