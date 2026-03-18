@@ -258,7 +258,7 @@ public class TestDataSourceTest {
                                 // mark as metadata stored
                                 localOutBox.metadataStored(metadataIn);
                                 // done
-                                LOGGER.debug("siteName <{}> metadataIn <{}>", siteName, metadataIn);
+                                LOGGER.info("siteName <{}> metadataIn <{}>", siteName, metadataIn);
                             }
                         }
 
