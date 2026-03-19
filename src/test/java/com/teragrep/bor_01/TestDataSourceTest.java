@@ -47,245 +47,30 @@ package com.teragrep.bor_01;
 
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
-import com.goterl.lazysodium.exceptions.SodiumException;
-import com.teragrep.bor_01.metadata.Metadata;
 import com.teragrep.bor_01.metadata.MetadataStorage;
 import com.teragrep.bor_01.metadata.MetadataStorageImpl;
-import com.teragrep.bor_01.object.Context;
 import com.teragrep.bor_01.objectstore.Namespace;
 import com.teragrep.bor_01.objectstore.NamespaceFake;
 import com.teragrep.bor_01.objectstore.Storage;
 import com.teragrep.bor_01.objectstore.StorageImpl;
 import com.teragrep.bor_01.outbox.OutBox;
 import com.teragrep.bor_01.outbox.OutBoxImpl;
-import com.teragrep.bor_01.tree.DiffUtil;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
 public class TestDataSourceTest {
 
-    interface Connectivity {
-
-        OutBox outBox();
-
-        Storage storage();
-
-        MetadataStorage metadataStorage();
-
-    }
-
-    private static class Datacenter implements Runnable, Connectivity {
-
-        private static final Logger LOGGER = LoggerFactory.getLogger(Datacenter.class);
-
-        private final String siteName;
-        private final OutBox outBox;
-        private final Storage storage;
-        private final MetadataStorage metadataStorage;
-        private final TestDataSource testDataSource;
-
-        Datacenter(
-                String siteName,
-                OutBox outbox,
-                Storage storage,
-                MetadataStorage metadataStorage,
-                TestDataSource testDataSource
-        ) {
-            this.siteName = siteName;
-            this.outBox = outbox;
-            this.storage = storage;
-            this.metadataStorage = metadataStorage;
-            this.testDataSource = testDataSource;
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    Context context = testDataSource.get();
-
-                    try {
-                        LOGGER.debug("site <{}> new data hex <{}>", siteName, context.metadata().point().toHex());
-                    }
-                    catch (NoSuchAlgorithmException | SodiumException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    outBox.objectFinalized(context.metadata());
-
-                    storage
-                            .put(
-                                    context.metadata().namespace(), context.metadata().path(), context.content(),
-                                    context.metadata().retention()
-                            );
-
-                    outBox.objectStored(context.metadata());
-
-                    metadataStorage.put(context.metadata());
-
-                    try {
-                        outBox.metadataStored(context.metadata());
-                    }
-                    catch (SodiumException | NoSuchAlgorithmException e) {
-                        LOGGER.error("Exception ", e);
-                        break;
-                    }
-
-                    try {
-                        Thread.sleep(20L);
-                    }
-                    catch (InterruptedException ignored) {
-
-                    }
-                }
-            }
-            catch (Exception e) {
-                LOGGER.error("Exception ", e);
-            }
-        }
-
-        @Override
-        public OutBox outBox() {
-            return outBox;
-        }
-
-        @Override
-        public Storage storage() {
-            return storage;
-        }
-
-        @Override
-        public MetadataStorage metadataStorage() {
-            return metadataStorage;
-        }
-
-    }
-
-    private static class Reconciliation implements Runnable {
-
-        private static final Logger LOGGER = LoggerFactory.getLogger(Reconciliation.class);
-
-        private final String siteName;
-        private final OutBox localOutBox;
-        private final Storage localStorage;
-        private final MetadataStorage localMetadataStorage;
-
-        private final OutBox remoteOutBox;
-        private final Storage remoteStorage;
-        private final MetadataStorage remoteMetadataStorage;
-
-        Reconciliation(
-                String siteName,
-                OutBox localOutBox,
-                Storage localStorage,
-                MetadataStorage localMetadataStorage,
-                OutBox remoteOutBox,
-                Storage remoteStorage,
-                MetadataStorage remoteMetadataStorage
-        ) {
-            this.siteName = siteName;
-            this.localOutBox = localOutBox;
-            this.localStorage = localStorage;
-            this.localMetadataStorage = localMetadataStorage;
-
-            this.remoteOutBox = remoteOutBox;
-            this.remoteStorage = remoteStorage;
-            this.remoteMetadataStorage = remoteMetadataStorage;
-
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    try {
-                        Queue<DiffUtil.DiffResult> modifiedHourStarts = DiffUtil
-                                .compareTrees(remoteOutBox, localOutBox);
-
-                        LOGGER.debug("siteName <{}> modifiedHourStarts size <{}>", siteName, modifiedHourStarts.size());
-
-                        while (!modifiedHourStarts.isEmpty()) {
-                            DiffUtil.DiffResult diffResult = modifiedHourStarts.poll();
-                            LOGGER.debug("about to download metadata for <{}>", diffResult);
-
-                            List<Metadata> downloadManifest = remoteMetadataStorage
-                                    .get(diffResult.index(), diffResult.instant());
-                            LOGGER.debug("downloadManifest <{}>", downloadManifest);
-
-                            // ++ TODO DO CROSS CHECK IF WE ALREADY HAVE SOME OF THE SET
-
-                            Set<Metadata> downloadedSet = new HashSet<>(downloadManifest);
-
-                            List<Metadata> localManifest = localMetadataStorage
-                                    .get(diffResult.index(), diffResult.instant());
-                            Set<Metadata> localSet = new HashSet<>(localManifest);
-
-                            downloadedSet.removeAll(localSet);
-                            // --
-
-                            // download stuff
-                            for (Metadata metadataIn : downloadedSet) {
-                                // download to site B, perhaps mark as sync or so in the outbox while doing so or use some work scheduling
-                                LOGGER.debug("about to download <{}>", metadataIn);
-                                byte[] contentIn = remoteStorage.get(metadataIn.namespace(), metadataIn.path());
-                                LOGGER.debug("downloadded <{}>", metadataIn);
-                                // mark as ready
-                                localOutBox.objectFinalized(metadataIn);
-                                LOGGER.debug("object finalized <{}>", metadataIn);
-                                // store object on site B
-                                localStorage
-                                        .put(
-                                                metadataIn.namespace(), metadataIn.path(), contentIn,
-                                                metadataIn.retention()
-                                        );
-                                LOGGER.debug("object stored <{}>", metadataIn);
-                                // mark as stored
-                                localOutBox.objectStored(metadataIn);
-                                LOGGER.debug("object marked stored <{}>", metadataIn);
-                                // store metadata
-                                localMetadataStorage.put(metadataIn);
-                                LOGGER.debug("object metadata stored <{}>", metadataIn);
-                                // mark as metadata stored
-                                localOutBox.metadataStored(metadataIn);
-                                // done
-                                LOGGER.info("siteName <{}> metadataIn <{}>", siteName, metadataIn);
-                            }
-                        }
-
-                        LOGGER.debug("siteName <{}> metadataStorage.size <{}>", siteName, localMetadataStorage.size());
-
-                        Thread.sleep(5000L);
-                    }
-                    catch (SodiumException | NoSuchAlgorithmException e) {
-                        LOGGER.error("Exception ", e);
-                        break;
-                    }
-                    catch (InterruptedException ignored) {
-
-                    }
-                    LOGGER.debug("rerunning sync loop");
-                }
-                LOGGER.info("exiting at thread <{}>", Thread.currentThread().getName());
-            }
-            catch (Exception e) {
-                LOGGER.error("Exception ", e);
-            }
-        }
-
-    }
-
     @Test
     public void test() throws MalformedURLException {
+
+        final long amountToRun = 1000L;
 
         ForkJoinPool pool = ForkJoinPool.commonPool();
 
@@ -302,7 +87,14 @@ public class TestDataSourceTest {
 
         MetadataStorage metadataStorageA = new MetadataStorageImpl("siteA");
 
-        Datacenter datacenterA = new Datacenter("siteA", outBoxA, storageA, metadataStorageA, testDataSourceA);
+        Datacenter datacenterA = new Datacenter(
+                "siteA",
+                outBoxA,
+                storageA,
+                metadataStorageA,
+                testDataSourceA,
+                amountToRun
+        );
 
         // site B
 
@@ -314,7 +106,14 @@ public class TestDataSourceTest {
 
         MetadataStorage metadataStorageB = new MetadataStorageImpl("siteB");
 
-        Datacenter datacenterB = new Datacenter("siteB", outBoxB, storageB, metadataStorageB, testDataSourceB);
+        Datacenter datacenterB = new Datacenter(
+                "siteB",
+                outBoxB,
+                storageB,
+                metadataStorageB,
+                testDataSourceB,
+                amountToRun
+        );
 
         Reconciliation reconciliationDcA = new Reconciliation(
                 "siteA",
@@ -323,7 +122,8 @@ public class TestDataSourceTest {
                 datacenterA.metadataStorage(),
                 datacenterB.outBox(),
                 datacenterB.storage(),
-                datacenterB.metadataStorage()
+                datacenterB.metadataStorage(),
+                amountToRun
         );
 
         Reconciliation reconciliationDcB = new Reconciliation(
@@ -333,23 +133,29 @@ public class TestDataSourceTest {
                 datacenterB.metadataStorage(),
                 datacenterA.outBox(),
                 datacenterA.storage(),
-                datacenterA.metadataStorage()
+                datacenterA.metadataStorage(),
+                amountToRun
         );
 
-        ForkJoinTask<?> dcrAtask = pool.submit(reconciliationDcA);
-        ForkJoinTask<?> dcrBtask = pool.submit(reconciliationDcB);
-        ForkJoinTask<?> dcAtask = pool.submit(datacenterA);
-        ForkJoinTask<?> dcBtask = pool.submit(datacenterB);
+        ForkJoinTask<Long> dcrAtask = pool.submit(reconciliationDcA);
+        ForkJoinTask<Long> dcrBtask = pool.submit(reconciliationDcB);
+        ForkJoinTask<Long> dcAtask = pool.submit(datacenterA);
+        ForkJoinTask<Long> dcBtask = pool.submit(datacenterB);
 
-        try {
-            dcBtask.get();
-        }
-        catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        Assertions.assertDoesNotThrow(() -> {
+            // TODO add timetouts
+            long siteAgenerated = dcAtask.get();
+            long siteBgenerated = dcBtask.get();
+            long siteAreconcialted = dcrAtask.get();
+            long siteBreconcialted = dcrBtask.get();
+
+            Assertions.assertEquals(siteBgenerated, siteAreconcialted);
+            Assertions.assertEquals(siteAgenerated, siteBreconcialted);
+        });
+
+        Assertions.assertEquals(amountToRun * 2, datacenterA.metadataStorage().size());
+        Assertions.assertEquals(amountToRun * 2, datacenterB.metadataStorage().size());
+
         /*
         Assertions.assertEquals(count, modifiedHourStarts.size());
         
