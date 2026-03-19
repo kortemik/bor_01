@@ -84,7 +84,7 @@ public class OutBoxImpl implements OutBox {
     }
 
     @Override
-    public void objectFinalized(final Metadata metadata) {
+    public synchronized void objectFinalized(final Metadata metadata) {
         if (storedObjects.containsKey(metadata.id())) {
             throw new IllegalStateException("Metadata already stored");
         }
@@ -95,7 +95,7 @@ public class OutBoxImpl implements OutBox {
     }
 
     @Override
-    public void objectStored(final Metadata metadata) {
+    public synchronized void objectStored(final Metadata metadata) {
         if (!finalizedObjects.containsKey(metadata.id())) {
             throw new IllegalStateException("Metadata not finalized");
         }
@@ -109,7 +109,7 @@ public class OutBoxImpl implements OutBox {
     }
 
     @Override
-    public void metadataStored(final Metadata metadata) throws SodiumException, NoSuchAlgorithmException {
+    public synchronized void metadataStored(final Metadata metadata) throws SodiumException, NoSuchAlgorithmException {
         if (finalizedObjects.containsKey(metadata.id())) {
             throw new IllegalStateException("Metadata still finalized");
         }
@@ -127,17 +127,17 @@ public class OutBoxImpl implements OutBox {
     }
 
     @Override
-    public List<Metadata> pendingObjectStore() {
+    public synchronized List<Metadata> pendingObjectStore() {
         return new ArrayList<>(finalizedObjects.values());
     }
 
     @Override
-    public List<Metadata> pendingMetadataStore() {
+    public synchronized List<Metadata> pendingMetadataStore() {
         return new ArrayList<>(storedObjects.values());
     }
 
     @Override
-    public MerkleTree tree(Index index) {
+    public synchronized MerkleTree tree(Index index) {
         final MerkleTree result;
         if (!merkleRangeTrees.containsKey(index)) {
             result = merkleRangeTrees.get(index);
@@ -149,12 +149,12 @@ public class OutBoxImpl implements OutBox {
     }
 
     @Override
-    public Map<Index, MerkleTree> trees() {
+    public synchronized Map<Index, MerkleTree> trees() {
         return new HashMap<>(merkleRangeTrees);
     }
 
     @Override
-    public void addIndex(final Index index) throws SodiumException {
+    public synchronized void addIndex(final Index index) throws SodiumException {
         Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(lazySodiumJava);
         merkleRangeTrees.put(index, new MerkleTreeImpl(lazySodiumJava, basePoint));
     }
