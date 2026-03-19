@@ -120,7 +120,7 @@ class Datacenter implements Callable<Long>, Connectivity {
                 }
 
                 try {
-                    Thread.sleep(20L);
+                    Thread.sleep(0L);
                 }
                 catch (InterruptedException ignored) {
 

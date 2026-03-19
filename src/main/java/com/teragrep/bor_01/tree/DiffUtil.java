@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.NavigableMap;
+import java.util.Map;
 import java.util.Queue;
 
 public class DiffUtil {
@@ -113,10 +113,10 @@ public class DiffUtil {
                         );
 
                 // find out changed years
-                NavigableMap<Instant, Ristretto255.RistrettoPoint> remoteSiteYear2PointMap = remoteSiteIndex2TreeEntry
+                Map<Instant, Ristretto255.RistrettoPoint> remoteSiteYear2PointMap = remoteSiteIndex2TreeEntry
                         .getValue()
                         .years();
-                NavigableMap<Instant, Ristretto255.RistrettoPoint> localSiteYear2PointMap = localSiteTree.years();
+                Map<Instant, Ristretto255.RistrettoPoint> localSiteYear2PointMap = localSiteTree.years();
 
                 for (
                     Map.Entry<Instant, Ristretto255.RistrettoPoint> remoteSiteYear2PointEntry : remoteSiteYear2PointMap
@@ -130,10 +130,10 @@ public class DiffUtil {
                         // year is modified
                         LOGGER.debug("year <{}> differs", remoteSiteYear2PointEntry.getKey());
                         for (Instant remoteSiteyearStart : remoteSiteYear2PointMap.keySet()) {
-                            NavigableMap<Instant, Ristretto255.RistrettoPoint> remoteSiteDay2PointMap = remoteSiteIndex2TreeEntry
+                            Map<Instant, Ristretto255.RistrettoPoint> remoteSiteDay2PointMap = remoteSiteIndex2TreeEntry
                                     .getValue()
                                     .days(remoteSiteyearStart);
-                            NavigableMap<Instant, Ristretto255.RistrettoPoint> localSiteDay2PointMap = localSiteTree
+                            Map<Instant, Ristretto255.RistrettoPoint> localSiteDay2PointMap = localSiteTree
                                     .days(remoteSiteyearStart);
 
                             for (
@@ -149,10 +149,10 @@ public class DiffUtil {
 
                                     for (Instant remoteSitedayStart : remoteSiteDay2PointMap.keySet()) {
 
-                                        NavigableMap<Instant, Ristretto255.RistrettoPoint> remoteSiteHour2PointMap = remoteSiteIndex2TreeEntry
+                                        Map<Instant, Ristretto255.RistrettoPoint> remoteSiteHour2PointMap = remoteSiteIndex2TreeEntry
                                                 .getValue()
                                                 .hours(remoteSitedayStart);
-                                        NavigableMap<Instant, Ristretto255.RistrettoPoint> localSiteHour2PointMap = localSiteTree
+                                        Map<Instant, Ristretto255.RistrettoPoint> localSiteHour2PointMap = localSiteTree
                                                 .hours(remoteSitedayStart);
 
                                         for (

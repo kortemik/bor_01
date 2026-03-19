@@ -91,7 +91,7 @@ public final class TestDataSource implements Supplier<Context> {
         byte[] contentBytes = content.getBytes(StandardCharsets.UTF_8);
 
         // reusing same digest instance and .reset() it is preferred way
-        MessageDigest md256 = null;
+        final MessageDigest md256;
         try {
             md256 = MessageDigest.getInstance("SHA-256");
         }

@@ -50,7 +50,7 @@ import com.goterl.lazysodium.interfaces.Ristretto255;
 import com.teragrep.stb_01.Stubable;
 
 import java.time.Instant;
-import java.util.NavigableMap;
+import java.util.Map;
 
 public interface MerkleTree extends Stubable {
 
@@ -58,11 +58,11 @@ public interface MerkleTree extends Stubable {
 
     Ristretto255.RistrettoPoint root() throws SodiumException;
 
-    NavigableMap<Instant, Ristretto255.RistrettoPoint> years() throws SodiumException;
+    Map<Instant, Ristretto255.RistrettoPoint> years() throws SodiumException;
 
-    NavigableMap<Instant, Ristretto255.RistrettoPoint> days(Instant epochYearStart) throws SodiumException;
+    Map<Instant, Ristretto255.RistrettoPoint> days(Instant epochYearStart) throws SodiumException;
 
-    NavigableMap<Instant, Ristretto255.RistrettoPoint> hours(Instant epochDayStart) throws SodiumException;
+    Map<Instant, Ristretto255.RistrettoPoint> hours(Instant epochDayStart) throws SodiumException;
 
     /*
     List<Ristretto255.RistrettoPoint> years();

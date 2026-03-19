@@ -150,7 +150,7 @@ public class OutBoxImpl implements OutBox {
 
     @Override
     public synchronized Map<Index, MerkleTree> trees() {
-        return new HashMap<>(merkleRangeTrees);
+        return Map.copyOf(merkleRangeTrees);
     }
 
     @Override

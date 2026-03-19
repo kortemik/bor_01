@@ -156,7 +156,7 @@ class Reconciliation implements Callable<Long> {
 
                     LOGGER.debug("siteName <{}> metadataStorage.size <{}>", siteName, localMetadataStorage.size());
 
-                    Thread.sleep(1000L);
+                    Thread.sleep(0L);
                 }
                 catch (SodiumException | NoSuchAlgorithmException e) {
                     LOGGER.error("Exception ", e);
