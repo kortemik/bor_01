@@ -117,7 +117,7 @@ public class MetadataStorageImpl implements MetadataStorage {
 
         //LOGGER.info("about to subMap");
         // NOTE subMap is a subMap, not a copy
-        return store.subMap(scanStartKey, scanEndKey).values();
+        return store.subMap(scanStartKey, true, scanEndKey, true).values();
         //LOGGER.info("submapped and got " + hourData.size() + " hours");
     }
 
