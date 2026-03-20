@@ -51,6 +51,7 @@ import com.goterl.lazysodium.interfaces.Ristretto255;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 // todo this tree computes everything on the fly
 public class MerkleTreeImpl implements MerkleTree {
@@ -60,7 +61,7 @@ public class MerkleTreeImpl implements MerkleTree {
     private final NavigableMap<Instant, Ristretto255.RistrettoPoint> hourPointMap;
 
     public MerkleTreeImpl(LazySodiumJava lazySodiumJava, Ristretto255.RistrettoPoint basePoint) {
-        this(lazySodiumJava, basePoint, new TreeMap<>());
+        this(lazySodiumJava, basePoint, new ConcurrentSkipListMap<>());
     }
 
     public MerkleTreeImpl(
@@ -74,12 +75,12 @@ public class MerkleTreeImpl implements MerkleTree {
     }
 
     @Override
-    public synchronized boolean isStub() {
+    public boolean isStub() {
         return false;
     }
 
     @Override
-    public synchronized void addMetadataPoint(final Instant epochHour, final Ristretto255.RistrettoPoint point)
+    public void addMetadataPoint(final Instant epochHour, final Ristretto255.RistrettoPoint point)
             throws SodiumException {
         if (!hourPointMap.containsKey(epochHour)) {
             hourPointMap.put(epochHour, basePoint);
@@ -93,7 +94,7 @@ public class MerkleTreeImpl implements MerkleTree {
     }
 
     @Override
-    public synchronized Ristretto255.RistrettoPoint root() throws SodiumException {
+    public Ristretto255.RistrettoPoint root() throws SodiumException {
 
         Map<Instant, Ristretto255.RistrettoPoint> yearPointMap = years();
 
@@ -107,8 +108,8 @@ public class MerkleTreeImpl implements MerkleTree {
     }
 
     @Override
-    public synchronized Map<Instant, Ristretto255.RistrettoPoint> years() throws SodiumException {
-        NavigableMap<Instant, Ristretto255.RistrettoPoint> yearPointMap = new TreeMap<>();
+    public Map<Instant, Ristretto255.RistrettoPoint> years() throws SodiumException {
+        NavigableMap<Instant, Ristretto255.RistrettoPoint> yearPointMap = new ConcurrentSkipListMap<>();
 
         for (Map.Entry<Instant, Ristretto255.RistrettoPoint> hourEntry : hourPointMap.entrySet()) {
             long epochYearLong = hourEntry.getKey().getEpochSecond() - hourEntry.getKey().getEpochSecond() % 31536000;
@@ -122,19 +123,18 @@ public class MerkleTreeImpl implements MerkleTree {
             yearPointMap.put(epochYear, newYearPoint);
         }
 
-        return Map.copyOf(yearPointMap);
+        return yearPointMap;
     }
 
     @Override
-    public synchronized Map<Instant, Ristretto255.RistrettoPoint> days(final Instant epochYearStart)
-            throws SodiumException {
+    public Map<Instant, Ristretto255.RistrettoPoint> days(final Instant epochYearStart) throws SodiumException {
         long epochYearEndLong = epochYearStart.getEpochSecond() + 31536000;
         Instant epochYearEnd = Instant.ofEpochSecond(epochYearEndLong);
 
         NavigableMap<Instant, Ristretto255.RistrettoPoint> yearHourMap = hourPointMap
                 .subMap(epochYearStart, true, epochYearEnd, false);
 
-        NavigableMap<Instant, Ristretto255.RistrettoPoint> dayPointMap = new TreeMap<>();
+        NavigableMap<Instant, Ristretto255.RistrettoPoint> dayPointMap = new ConcurrentSkipListMap<>();
 
         for (Map.Entry<Instant, Ristretto255.RistrettoPoint> hourEntry : yearHourMap.entrySet()) {
             long epochDayLong = hourEntry.getKey().getEpochSecond() - hourEntry.getKey().getEpochSecond() % 86400;
@@ -148,16 +148,15 @@ public class MerkleTreeImpl implements MerkleTree {
             dayPointMap.put(epochDay, newDayPoint);
         }
 
-        return Map.copyOf(dayPointMap);
+        return dayPointMap;
     }
 
     @Override
-    public synchronized Map<Instant, Ristretto255.RistrettoPoint> hours(final Instant epochDayStart)
-            throws SodiumException {
+    public Map<Instant, Ristretto255.RistrettoPoint> hours(final Instant epochDayStart) throws SodiumException {
         long epochDayEndLong = epochDayStart.getEpochSecond() + 86400;
         Instant epochDayEnd = Instant.ofEpochSecond(epochDayEndLong);
 
-        return Map.copyOf(hourPointMap.subMap(epochDayStart, true, epochDayEnd, false));
+        return hourPointMap.subMap(epochDayStart, true, epochDayEnd, false);
     }
 
 }

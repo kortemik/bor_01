@@ -57,6 +57,8 @@ import com.teragrep.bor_01.outbox.OutBox;
 import com.teragrep.bor_01.outbox.OutBoxImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -67,10 +69,12 @@ import java.util.concurrent.ForkJoinTask;
 
 public class TestDataSourceTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestDataSourceTest.class);
+
     @Test
     public void test() throws MalformedURLException, InterruptedException {
 
-        final long amountToRun = 1000L;
+        final long amountToRun = 5000L;
 
         ForkJoinPool pool = ForkJoinPool.commonPool();
 
@@ -150,11 +154,15 @@ public class TestDataSourceTest {
             long siteBreconcialted = dcrBtask.get();
 
             Assertions.assertEquals(siteBgenerated, siteAreconcialted);
+            LOGGER.info("siteBgenerated <{}>,  siteAreconcialted <{}>", siteBgenerated, siteAreconcialted);
             Assertions.assertEquals(siteAgenerated, siteBreconcialted);
+            LOGGER.info("siteAgenerated <{}>, siteBreconcialted <{}>", siteAgenerated, siteBreconcialted);
         });
 
         Assertions.assertEquals(amountToRun * 2, datacenterA.metadataStorage().size());
+        LOGGER.info("datacenterA.metadataStorage().size() <{}>", datacenterA.metadataStorage().size());
         Assertions.assertEquals(amountToRun * 2, datacenterB.metadataStorage().size());
+        LOGGER.info("datacenterB.metadataStorage().size() <{}>", datacenterB.metadataStorage().size());
 
         /*
         Assertions.assertEquals(count, modifiedHourStarts.size());

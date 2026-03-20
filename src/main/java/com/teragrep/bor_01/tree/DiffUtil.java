@@ -165,23 +165,27 @@ public class DiffUtil {
                                                         || !localSiteHour2PointMap.get(remoteSiteHourEntry.getKey()).equals(remoteSiteHourEntry.getValue())
                                             ) {
 
-                                                if (localSiteHour2PointMap.containsKey(remoteSiteHourEntry.getKey())) {
-                                                    LOGGER
-                                                            .debug(
-                                                                    "hour hex local <{}> remote <{}>",
-                                                                    localSiteHour2PointMap
-                                                                            .get(remoteSiteHourEntry.getKey())
-                                                                            .toHex(),
-                                                                    remoteSiteHourEntry.getValue().toHex()
-                                                            );
-                                                }
-                                                else {
-                                                    LOGGER
-                                                            .debug(
-                                                                    "hour <{}> not local, remote hex <{}>",
-                                                                    remoteSiteHourEntry.getKey(),
-                                                                    remoteSiteHourEntry.getValue().toHex()
-                                                            );
+                                                if (LOGGER.isDebugEnabled()) {
+                                                    if (
+                                                        localSiteHour2PointMap.containsKey(remoteSiteHourEntry.getKey())
+                                                    ) {
+                                                        LOGGER
+                                                                .debug(
+                                                                        "hour hex local <{}> remote <{}>",
+                                                                        localSiteHour2PointMap
+                                                                                .get(remoteSiteHourEntry.getKey())
+                                                                                .toHex(),
+                                                                        remoteSiteHourEntry.getValue().toHex()
+                                                                );
+                                                    }
+                                                    else {
+                                                        LOGGER
+                                                                .debug(
+                                                                        "hour <{}> not local, remote hex <{}>",
+                                                                        remoteSiteHourEntry.getKey(),
+                                                                        remoteSiteHourEntry.getValue().toHex()
+                                                                );
+                                                    }
                                                 }
                                                 // hour is modified and needs a pull
                                                 LOGGER.debug("hour <{}> differs", remoteSiteHourEntry.getKey());

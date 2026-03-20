@@ -114,7 +114,33 @@ public class RowKeyImpl implements RowKey {
 
     @Override
     public int compareTo(final RowKey other) {
-        return comparator.compare(this, other);
+        //return comparator.compare(this, other);
+
+        int idxCmp = Long.compare(this.index.id(), other.index().id());
+        if (idxCmp != 0) {
+            return idxCmp;
+        }
+
+        int epochCmp = epochHour.compareTo(other.epochHour());
+        if (epochCmp != 0) {
+            return epochCmp;
+        }
+
+        int idCmp = Long.compare(this.id.id(), other.id().id());
+        if (idCmp != 0) {
+            return idCmp;
+        }
+
+        int siteIdCmp = Long.compare(this.site().id(), other.site().id());
+        if (siteIdCmp != 0) {
+            return siteIdCmp;
+        }
+
+        int siteNameCmp = this.site.name().compareTo(other.site().name());
+        if (siteNameCmp != 0) {
+            return siteNameCmp;
+        }
+        return 0;
     }
 
     @Override

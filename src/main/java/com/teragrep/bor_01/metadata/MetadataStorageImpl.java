@@ -45,6 +45,7 @@
  */
 package com.teragrep.bor_01.metadata;
 
+import com.teragrep.bor_01.id.Id;
 import com.teragrep.bor_01.id.IdImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,21 +100,16 @@ public class MetadataStorageImpl implements MetadataStorage {
         store.remove(rowKey);
     }
 
+    private static final Id minId = new IdImpl(Long.MIN_VALUE);
+    private static final Id maxId = new IdImpl(Long.MAX_VALUE);
+    private static final Site minSite = new SiteImpl(Integer.MIN_VALUE, "");
+    private static final Site maxSite = new SiteImpl(Integer.MAX_VALUE, "");
+
     @Override
     public synchronized Collection<Metadata> get(Index index, Instant epochHourStart) {
 
-        RowKey scanStartKey = new RowKeyImpl(
-                index,
-                epochHourStart,
-                new IdImpl(Long.MIN_VALUE),
-                new SiteImpl(Integer.MIN_VALUE, "")
-        );
-        RowKey scanEndKey = new RowKeyImpl(
-                index,
-                epochHourStart,
-                new IdImpl(Long.MAX_VALUE),
-                new SiteImpl(Integer.MAX_VALUE, "")
-        );
+        RowKey scanStartKey = new RowKeyImpl(index, epochHourStart, minId, minSite);
+        RowKey scanEndKey = new RowKeyImpl(index, epochHourStart, maxId, maxSite);
 
         //LOGGER.info("about to subMap");
         // NOTE subMap is a subMap, not a copy
