@@ -150,13 +150,13 @@ public class TestDataSourceTest {
             // TODO add timetouts
             long siteAgenerated = dcAtask.get();
             long siteBgenerated = dcBtask.get();
-            long siteAreconcialted = dcrAtask.get();
-            long siteBreconcialted = dcrBtask.get();
+            long siteAConciliated = dcrAtask.get();
+            long siteBConciliated = dcrBtask.get();
 
-            Assertions.assertEquals(siteBgenerated, siteAreconcialted);
-            LOGGER.info("siteBgenerated <{}>,  siteAreconcialted <{}>", siteBgenerated, siteAreconcialted);
-            Assertions.assertEquals(siteAgenerated, siteBreconcialted);
-            LOGGER.info("siteAgenerated <{}>, siteBreconcialted <{}>", siteAgenerated, siteBreconcialted);
+            Assertions.assertEquals(siteBgenerated, siteAConciliated);
+            LOGGER.info("siteBgenerated <{}>,  siteAConciliated <{}>", siteBgenerated, siteAConciliated);
+            Assertions.assertEquals(siteAgenerated, siteBConciliated);
+            LOGGER.info("siteAgenerated <{}>, siteBConciliated <{}>", siteAgenerated, siteBConciliated);
         });
 
         Assertions.assertEquals(amountToRun * 2, datacenterA.metadataStorage().size());
