@@ -55,10 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 class Reconciliation implements Callable<Long> {
@@ -112,7 +109,7 @@ class Reconciliation implements Callable<Long> {
                         DiffUtil.DiffResult diffResult = modifiedHourStarts.poll();
                         LOGGER.debug("about to download metadata for <{}>", diffResult);
 
-                        List<Metadata> downloadManifest = remoteMetadataStorage
+                        Collection<Metadata> downloadManifest = remoteMetadataStorage
                                 .get(diffResult.index(), diffResult.instant());
                         LOGGER.debug("downloadManifest <{}>", downloadManifest);
 
@@ -120,7 +117,7 @@ class Reconciliation implements Callable<Long> {
 
                         Set<Metadata> downloadedSet = new HashSet<>(downloadManifest);
 
-                        List<Metadata> localManifest = localMetadataStorage
+                        Collection<Metadata> localManifest = localMetadataStorage
                                 .get(diffResult.index(), diffResult.instant());
                         Set<Metadata> localSet = new HashSet<>(localManifest);
 

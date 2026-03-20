@@ -59,7 +59,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
@@ -68,7 +68,7 @@ import java.util.concurrent.ForkJoinTask;
 public class TestDataSourceTest {
 
     @Test
-    public void test() throws MalformedURLException {
+    public void test() throws MalformedURLException, InterruptedException {
 
         final long amountToRun = 1000L;
 
@@ -83,7 +83,7 @@ public class TestDataSourceTest {
 
         OutBox outBoxA = new OutBoxImpl(lazySodiumJava);
 
-        Storage storageA = new StorageImpl(new URL("https://localhost:8123/s3"), durationMap);
+        Storage storageA = new StorageImpl(URI.create("https://localhost:8123/s3").toURL(), durationMap);
 
         MetadataStorage metadataStorageA = new MetadataStorageImpl("siteA");
 
@@ -102,7 +102,7 @@ public class TestDataSourceTest {
 
         OutBox outBoxB = new OutBoxImpl(lazySodiumJava);
 
-        Storage storageB = new StorageImpl(new URL("https://localhost:8080/s3"), durationMap);
+        Storage storageB = new StorageImpl(URI.create("https://localhost:8080/s3").toURL(), durationMap);
 
         MetadataStorage metadataStorageB = new MetadataStorageImpl("siteB");
 

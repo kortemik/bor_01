@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public class MetadataStorageImpl implements MetadataStorage {
 
@@ -61,7 +62,7 @@ public class MetadataStorageImpl implements MetadataStorage {
     private final Metadata metadataStub;
 
     public MetadataStorageImpl(String siteName) {
-        this(siteName, new TreeMap<>(), new MetadataStub());
+        this(siteName, new ConcurrentSkipListMap<>(), new MetadataStub());
     }
 
     private MetadataStorageImpl(String siteName, NavigableMap<RowKey, Metadata> store, Metadata metadataStub) {
@@ -99,7 +100,7 @@ public class MetadataStorageImpl implements MetadataStorage {
     }
 
     @Override
-    public synchronized List<Metadata> get(Index index, Instant epochHourStart) {
+    public synchronized Collection<Metadata> get(Index index, Instant epochHourStart) {
 
         RowKey scanStartKey = new RowKeyImpl(
                 index,
@@ -109,15 +110,15 @@ public class MetadataStorageImpl implements MetadataStorage {
         );
         RowKey scanEndKey = new RowKeyImpl(
                 index,
-                epochHourStart.plusSeconds(1),
+                epochHourStart,
                 new IdImpl(Long.MAX_VALUE),
                 new SiteImpl(Integer.MAX_VALUE, "")
         );
 
         //LOGGER.info("about to subMap");
-        List<Metadata> hourData = new ArrayList<>(store.subMap(scanStartKey, scanEndKey).values());
+        // NOTE subMap is a subMap, not a copy
+        return store.subMap(scanStartKey, scanEndKey).values();
         //LOGGER.info("submapped and got " + hourData.size() + " hours");
-        return hourData;
     }
 
     @Override
