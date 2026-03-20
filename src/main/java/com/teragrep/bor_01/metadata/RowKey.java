@@ -52,7 +52,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 
 // perhaps comparable but taking a shortcut for now
-public interface RowKey extends Stubable {
+public interface RowKey extends Stubable, Comparable<RowKey> {
 
     // it is more feasible to use perhaps index, instant, ristretto255.hash(sha256content + sha256metadata) and forget the site id
     // todo we could hash(index) to distribute load in hbase

@@ -45,12 +45,21 @@
  */
 package com.teragrep.bor_01.id;
 
+import java.util.Comparator;
+import java.util.Objects;
+
 public class IdImpl implements Id {
 
     private final long id;
+    private final boolean isStub;
 
     public IdImpl(long id) {
+        this(id, false);
+    }
+
+    private IdImpl(long id, boolean isStub) {
         this.id = id;
+        this.isStub = isStub;
     }
 
     @Override
@@ -61,6 +70,29 @@ public class IdImpl implements Id {
     @Override
     public String toString() {
         return "IdImpl{" + "id=" + id + '}';
+    }
+
+    @Override
+    public int compareTo(final Id other) {
+        return Comparator.comparingLong(Id::id).compare(this, other);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        final IdImpl id1 = (IdImpl) o;
+        return id == id1.id && isStub == id1.isStub;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, isStub);
+    }
+
+    @Override
+    public boolean isStub() {
+        return isStub;
     }
 
 }

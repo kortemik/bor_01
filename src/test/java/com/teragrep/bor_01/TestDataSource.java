@@ -75,8 +75,8 @@ public final class TestDataSource implements Supplier<Context> {
 
     public TestDataSource(LazySodiumJava lazySodiumJava, int siteId, String siteName) {
         this.lazySodiumJava = lazySodiumJava;
-        this.index = new IndexFake();
-        this.site = new SiteFake(siteId, siteName);
+        this.index = new IndexImpl();
+        this.site = new SiteImpl(siteId, siteName);
         this.allocation = new AllocationImpl();
         this.namespace = new NamespaceFake("year-store");
         this.testContentPrefix = "test data at Instant.now() -> ";

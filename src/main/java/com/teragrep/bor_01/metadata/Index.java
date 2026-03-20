@@ -45,7 +45,7 @@
  */
 package com.teragrep.bor_01.metadata;
 
-public interface Index {
+public interface Index extends Comparable<Index> {
 
     public abstract long id();
 

@@ -45,7 +45,9 @@
  */
 package com.teragrep.bor_01.id;
 
-public interface Id {
+import com.teragrep.stb_01.Stubable;
+
+public interface Id extends Stubable, Comparable<Id> {
 
     public abstract long id();
 }

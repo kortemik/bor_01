@@ -45,14 +45,23 @@
  */
 package com.teragrep.bor_01.metadata;
 
-public class SiteFake implements Site {
+import java.util.Comparator;
+import java.util.Objects;
+
+public class SiteImpl implements Site {
 
     private final int id;
     private final String name;
+    private final boolean isStub;
 
-    public SiteFake(int id, String name) {
+    public SiteImpl(int id, String name) {
+        this(id, name, false);
+    }
+
+    private SiteImpl(int id, String name, final boolean isStub) {
         this.id = id;
         this.name = name;
+        this.isStub = isStub;
     }
 
     @Override
@@ -68,6 +77,29 @@ public class SiteFake implements Site {
     @Override
     public String toString() {
         return "SiteFake{" + "id=" + id + ", name='" + name + '\'' + '}';
+    }
+
+    @Override
+    public int compareTo(final Site other) {
+        return Comparator.comparingLong(Site::id).thenComparing(Site::name).compare(this, other);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        final SiteImpl siteImpl = (SiteImpl) o;
+        return id == siteImpl.id && isStub == siteImpl.isStub && Objects.equals(name, siteImpl.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, isStub);
+    }
+
+    @Override
+    public boolean isStub() {
+        return isStub;
     }
 
 }

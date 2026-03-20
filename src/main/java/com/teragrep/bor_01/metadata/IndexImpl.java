@@ -45,90 +45,55 @@
  */
 package com.teragrep.bor_01.metadata;
 
-import com.teragrep.bor_01.id.Id;
-
-import java.nio.ByteBuffer;
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.Objects;
 
-public class RowKeyImpl implements RowKey {
+public class IndexImpl implements Index {
 
-    private static final Comparator<RowKey> comparator = Comparator
-            .comparing(RowKey::index)
-            .thenComparing(RowKey::epochHour)
-            .thenComparing(RowKey::id)
-            .thenComparing(RowKey::site);
+    private final long id;
+    private final String name;
 
-    private final Index index;
-    private final Instant epochHour;
-    private final Id id;
-    private final Site site;
+    public IndexImpl() {
+        this.id = 138;
+        this.name = "test-index";
+    }
 
-    public RowKeyImpl(Index index, Instant epochHour, Id id, Site site) {
-        this.index = index;
-        this.epochHour = epochHour;
+    public IndexImpl(long id, String name) {
         this.id = id;
-        this.site = site;
+        this.name = name;
     }
 
     @Override
-    public Index index() {
-        return index;
-    }
-
-    @Override
-    public Instant epochHour() {
-        return epochHour;
-    }
-
-    @Override
-    public Id id() {
+    public long id() {
         return id;
     }
 
     @Override
-    public Site site() {
-        return site;
-    }
-
-    @Override
-    public ByteBuffer asBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES * 4);
-        buffer.putLong(index.id());
-        buffer.putLong(epochHour.getEpochSecond());
-        buffer.putLong(id.id());
-        buffer.putLong(site.id());
-        return buffer.flip();
-    }
-
-    @Override
-    public boolean isStub() {
-        return false;
+    public String name() {
+        return name;
     }
 
     @Override
     public String toString() {
-        return "RowKeyImpl{" + "index=" + index + ", epochHour=" + epochHour + ", id=" + id + ", site=" + site + '}';
+        return "IndexFake{" + "id=" + id + ", name='" + name + '\'' + '}';
     }
 
     @Override
-    public int compareTo(final RowKey other) {
-        return comparator.compare(this, other);
+    public int compareTo(final Index other) {
+        return Comparator.comparingLong(Index::id).thenComparing(Index::name).compare(this, other);
     }
 
     @Override
     public boolean equals(final Object o) {
         if (o == null || getClass() != o.getClass())
             return false;
-        final RowKeyImpl rowKey = (RowKeyImpl) o;
-        return Objects.equals(index, rowKey.index) && Objects.equals(epochHour, rowKey.epochHour)
-                && Objects.equals(id, rowKey.id) && Objects.equals(site, rowKey.site);
+        final IndexImpl indexImpl = (IndexImpl) o;
+        return id == indexImpl.id && Objects.equals(name, indexImpl.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, epochHour, id, site);
+        return Objects.hash(id, name);
     }
 
 }

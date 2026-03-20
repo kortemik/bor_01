@@ -43,92 +43,49 @@
  * Teragrep, the applicable Commercial License may apply to this file if you as
  * a licensee so wish it.
  */
-package com.teragrep.bor_01.metadata;
+package com.teragrep.bor_01.id;
 
-import com.teragrep.bor_01.id.Id;
-
-import java.nio.ByteBuffer;
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.Objects;
 
-public class RowKeyImpl implements RowKey {
+public class IdStub implements Id {
 
-    private static final Comparator<RowKey> comparator = Comparator
-            .comparing(RowKey::index)
-            .thenComparing(RowKey::epochHour)
-            .thenComparing(RowKey::id)
-            .thenComparing(RowKey::site);
+    private final boolean isStub;
 
-    private final Index index;
-    private final Instant epochHour;
-    private final Id id;
-    private final Site site;
+    public IdStub() {
+        this(true);
+    }
 
-    public RowKeyImpl(Index index, Instant epochHour, Id id, Site site) {
-        this.index = index;
-        this.epochHour = epochHour;
-        this.id = id;
-        this.site = site;
+    private IdStub(final boolean isStub) {
+        this.isStub = isStub;
     }
 
     @Override
-    public Index index() {
-        return index;
-    }
-
-    @Override
-    public Instant epochHour() {
-        return epochHour;
-    }
-
-    @Override
-    public Id id() {
-        return id;
-    }
-
-    @Override
-    public Site site() {
-        return site;
-    }
-
-    @Override
-    public ByteBuffer asBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES * 4);
-        buffer.putLong(index.id());
-        buffer.putLong(epochHour.getEpochSecond());
-        buffer.putLong(id.id());
-        buffer.putLong(site.id());
-        return buffer.flip();
+    public long id() {
+        throw new UnsupportedOperationException("stub");
     }
 
     @Override
     public boolean isStub() {
-        return false;
+        return isStub;
     }
 
     @Override
-    public String toString() {
-        return "RowKeyImpl{" + "index=" + index + ", epochHour=" + epochHour + ", id=" + id + ", site=" + site + '}';
-    }
-
-    @Override
-    public int compareTo(final RowKey other) {
-        return comparator.compare(this, other);
+    public int compareTo(final Id other) {
+        return Comparator.comparing(Id::isStub).compare(this, other);
     }
 
     @Override
     public boolean equals(final Object o) {
         if (o == null || getClass() != o.getClass())
             return false;
-        final RowKeyImpl rowKey = (RowKeyImpl) o;
-        return Objects.equals(index, rowKey.index) && Objects.equals(epochHour, rowKey.epochHour)
-                && Objects.equals(id, rowKey.id) && Objects.equals(site, rowKey.site);
+        final IdStub idStub = (IdStub) o;
+        return isStub == idStub.isStub;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, epochHour, id, site);
+        return Objects.hashCode(isStub);
     }
 
 }

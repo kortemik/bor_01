@@ -45,7 +45,9 @@
  */
 package com.teragrep.bor_01.metadata;
 
-public interface Site {
+import com.teragrep.stb_01.Stubable;
+
+public interface Site extends Stubable, Comparable<Site> {
 
     public abstract long id();
 

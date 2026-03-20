@@ -45,10 +45,10 @@
  */
 package com.teragrep.bor_01.metadata;
 
+import com.teragrep.bor_01.id.IdImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.*;
 
@@ -57,14 +57,14 @@ public class MetadataStorageImpl implements MetadataStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataStorageImpl.class);
 
     private final String siteName;
-    private final Map<ByteBuffer, Metadata> store;
+    private final NavigableMap<RowKey, Metadata> store;
     private final Metadata metadataStub;
 
     public MetadataStorageImpl(String siteName) {
         this(siteName, new TreeMap<>(), new MetadataStub());
     }
 
-    private MetadataStorageImpl(String siteName, Map<ByteBuffer, Metadata> store, Metadata metadataStub) {
+    private MetadataStorageImpl(String siteName, NavigableMap<RowKey, Metadata> store, Metadata metadataStub) {
         this.siteName = siteName;
         this.store = store;
         this.metadataStub = metadataStub;
@@ -73,49 +73,51 @@ public class MetadataStorageImpl implements MetadataStorage {
     @Override
     public synchronized void put(final Metadata metadata) {
         LOGGER.debug("about to put metadata <[{}]>", metadata);
-        final ByteBuffer rowKeyByteBuffer = metadata.rowKey().asBytes();
 
-        if (store.containsKey(rowKeyByteBuffer)) {
+        if (store.containsKey(metadata.rowKey())) {
             throw new IllegalArgumentException("Duplicate row key: " + metadata.rowKey());
         }
 
-        store.put(rowKeyByteBuffer, metadata);
+        store.put(metadata.rowKey(), metadata);
         LOGGER.debug("stored metadata <[{}]>", metadata);
         LOGGER.debug("metadata storage size <{}>", store.size());
     }
 
     @Override
     public synchronized Metadata get(final RowKey rowKey) {
-        return store.getOrDefault(rowKey.asBytes(), metadataStub);
+        return store.getOrDefault(rowKey, metadataStub);
     }
 
     @Override
     public void delete(final RowKey rowKey) {
-        final ByteBuffer rowKeyByteBuffer = rowKey.asBytes();
 
-        if (!store.containsKey(rowKeyByteBuffer)) {
+        if (!store.containsKey(rowKey)) {
             throw new IllegalArgumentException("Non-existing row key: " + rowKey);
         }
 
-        store.remove(rowKeyByteBuffer);
+        store.remove(rowKey);
     }
 
     @Override
     public synchronized List<Metadata> get(Index index, Instant epochHourStart) {
-        List<Metadata> result = new LinkedList<>();
 
-        // todo perhaps this to RowKey itself as match(x,y)
-        for (Map.Entry<ByteBuffer, Metadata> entry : store.entrySet()) {
-            ByteBuffer rowkeyBB = entry.getKey().duplicate();
+        RowKey scanStartKey = new RowKeyImpl(
+                index,
+                epochHourStart,
+                new IdImpl(Long.MIN_VALUE),
+                new SiteImpl(Integer.MIN_VALUE, "")
+        );
+        RowKey scanEndKey = new RowKeyImpl(
+                index,
+                epochHourStart.plusSeconds(1),
+                new IdImpl(Long.MAX_VALUE),
+                new SiteImpl(Integer.MAX_VALUE, "")
+        );
 
-            long indexId = rowkeyBB.getLong();
-            long rowKeyepochHourStart = rowkeyBB.getLong();
-
-            if (index.id() == indexId && epochHourStart.getEpochSecond() == rowKeyepochHourStart) {
-                result.add(entry.getValue());
-            }
-        }
-        return result;
+        //LOGGER.info("about to subMap");
+        List<Metadata> hourData = new ArrayList<>(store.subMap(scanStartKey, scanEndKey).values());
+        //LOGGER.info("submapped and got " + hourData.size() + " hours");
+        return hourData;
     }
 
     @Override

@@ -45,34 +45,52 @@
  */
 package com.teragrep.bor_01.metadata;
 
-public class IndexFake implements Index {
+import java.util.Comparator;
+import java.util.Objects;
 
-    private final long id;
-    private final String name;
+public class SiteStub implements Site {
 
-    public IndexFake() {
-        this.id = 138;
-        this.name = "test-index";
+    private final boolean isStub;
+
+    public SiteStub() {
+        this(true);
     }
 
-    public IndexFake(long id, String name) {
-        this.id = id;
-        this.name = name;
+    private SiteStub(final boolean isStub) {
+        this.isStub = isStub;
     }
 
     @Override
     public long id() {
-        return id;
+        throw new UnsupportedOperationException("stub");
     }
 
     @Override
     public String name() {
-        return name;
+        throw new UnsupportedOperationException("stub");
     }
 
     @Override
-    public String toString() {
-        return "IndexFake{" + "id=" + id + ", name='" + name + '\'' + '}';
+    public boolean isStub() {
+        return isStub;
+    }
+
+    @Override
+    public int compareTo(final Site other) {
+        return Comparator.comparing(Site::isStub).compare(this, other);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        final SiteStub siteStub = (SiteStub) o;
+        return isStub == siteStub.isStub;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(isStub);
     }
 
 }
