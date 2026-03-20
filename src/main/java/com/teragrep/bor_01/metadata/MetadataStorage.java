@@ -56,6 +56,8 @@ public interface MetadataStorage {
 
     public abstract void delete(RowKey rowKey);
 
+    boolean contains(RowKey rowKey);
+
     Collection<Metadata> get(Index index, Instant epochHourStart);
 
     int size();

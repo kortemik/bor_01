@@ -50,7 +50,7 @@ import com.goterl.lazysodium.SodiumJava;
 import com.teragrep.bor_01.metadata.MetadataStorage;
 import com.teragrep.bor_01.metadata.MetadataStorageImpl;
 import com.teragrep.bor_01.objectstore.Namespace;
-import com.teragrep.bor_01.objectstore.NamespaceFake;
+import com.teragrep.bor_01.objectstore.NamespaceImpl;
 import com.teragrep.bor_01.objectstore.Storage;
 import com.teragrep.bor_01.objectstore.StorageImpl;
 import com.teragrep.bor_01.outbox.OutBox;
@@ -79,7 +79,7 @@ public class TestDataSourceTest {
         ForkJoinPool pool = ForkJoinPool.commonPool();
 
         NavigableMap<Duration, Namespace> durationMap = new TreeMap<>();
-        durationMap.put(Duration.ofSeconds(10L), new NamespaceFake("year-store"));
+        durationMap.put(Duration.ofSeconds(10L), new NamespaceImpl("year-store"));
         LazySodiumJava lazySodiumJava = new LazySodiumJava(new SodiumJava());
 
         // site A

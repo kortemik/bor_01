@@ -47,11 +47,11 @@ package com.teragrep.bor_01.objectstore;
 
 import java.util.Objects;
 
-public class NamespaceFake implements Namespace {
+public class NamespaceImpl implements Namespace {
 
     private final String name;
 
-    public NamespaceFake(String name) {
+    public NamespaceImpl(String name) {
         this.name = name;
     }
 
@@ -66,11 +66,16 @@ public class NamespaceFake implements Namespace {
     }
 
     @Override
+    public int compareTo(final Namespace other) {
+        return name.compareTo(other.name());
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (o == null || getClass() != o.getClass())
             return false;
-        final NamespaceFake that = (NamespaceFake) o;
-        return Objects.equals(name, that.name);
+        final NamespaceImpl namespace = (NamespaceImpl) o;
+        return Objects.equals(name, namespace.name);
     }
 
     @Override

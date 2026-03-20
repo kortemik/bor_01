@@ -100,6 +100,11 @@ public class MetadataStorageImpl implements MetadataStorage {
         store.remove(rowKey);
     }
 
+    @Override
+    public boolean contains(RowKey rowKey) {
+        return store.containsKey(rowKey);
+    }
+
     private static final Id minId = new IdImpl(Long.MIN_VALUE);
     private static final Id maxId = new IdImpl(Long.MAX_VALUE);
     private static final Site minSite = new SiteImpl(Integer.MIN_VALUE, "");

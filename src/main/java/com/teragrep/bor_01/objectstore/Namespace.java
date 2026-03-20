@@ -45,7 +45,7 @@
  */
 package com.teragrep.bor_01.objectstore;
 
-public interface Namespace {
+public interface Namespace extends Comparable<Namespace> {
 
     public abstract String name();
 }

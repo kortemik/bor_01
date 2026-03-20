@@ -115,17 +115,15 @@ class Reconciliation implements Callable<Long> {
 
                         // ++ TODO DO CROSS CHECK IF WE ALREADY HAVE SOME OF THE SET
 
-                        Set<Metadata> downloadedSet = new HashSet<>(downloadManifest);
+                        for (Metadata metadataIn : downloadManifest) {
+                            if (localMetadataStorage.contains(metadataIn.rowKey())) {
+                                continue;
+                            }
 
-                        Collection<Metadata> localManifest = localMetadataStorage
-                                .get(diffResult.index(), diffResult.instant());
-                        Set<Metadata> localSet = new HashSet<>(localManifest);
+                            // --
 
-                        downloadedSet.removeAll(localSet);
-                        // --
+                            // download stuff
 
-                        // download stuff
-                        for (Metadata metadataIn : downloadedSet) {
                             // download to site B, perhaps mark as sync or so in the outbox while doing so or use some work scheduling
                             LOGGER.debug("about to download <{}>", metadataIn);
                             byte[] contentIn = remoteStorage.get(metadataIn.namespace(), metadataIn.path());
@@ -146,7 +144,7 @@ class Reconciliation implements Callable<Long> {
                             // mark as metadata stored
                             localOutBox.metadataStored(metadataIn);
                             // done
-                            LOGGER.info("siteName <{}> metadataIn <{}>", siteName, metadataIn);
+                            LOGGER.debug("siteName <{}> metadataIn <{}>", siteName, metadataIn);
                             counter++;
                         }
                     }

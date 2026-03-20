@@ -49,6 +49,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public class StorageImpl implements Storage {
 
@@ -57,7 +58,7 @@ public class StorageImpl implements Storage {
     private final Map<Namespace, Map<Path, byte[]>> contentMap;
 
     public StorageImpl(final URL url, final NavigableMap<Duration, Namespace> retentionCategories) {
-        this(url, retentionCategories, new HashMap<>());
+        this(url, retentionCategories, new ConcurrentSkipListMap<>());
     }
 
     public StorageImpl(
