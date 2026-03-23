@@ -124,6 +124,6 @@ public class Ristretto255Test {
         long timeTaken = (end - start) / 1_000_000;
         float hashesPerMilliSecond = (float) counter / timeTaken;
         System.out.println("hashesPerMilliSecond " + hashesPerMilliSecond);
-        // got 12.690678 on E-2276M
+        // got 58.558296 on E-2276M
     }
 }
