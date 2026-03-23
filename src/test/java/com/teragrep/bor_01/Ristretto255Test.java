@@ -51,6 +51,7 @@ import com.goterl.lazysodium.exceptions.SodiumException;
 import com.goterl.lazysodium.interfaces.Ristretto255;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -80,5 +81,49 @@ public class Ristretto255Test {
         Ristretto255.RistrettoPoint result = ls.cryptoCoreRistretto255Sub(added, point);
 
         Assertions.assertEquals(base, result);
+    }
+
+    @Test
+    @EnabledIfSystemProperty(
+            named = "testRistretto255Performance",
+            matches = "true"
+    )
+    public void testPerformance() throws SodiumException, NoSuchAlgorithmException {
+
+        // bogus sha256
+        MessageDigest md256 = MessageDigest.getInstance("SHA-256");
+        byte[] sha256Digest = md256.digest("foobar".getBytes(StandardCharsets.UTF_8));
+
+        // expand to sha512 as ristretto requires 64bit points
+        MessageDigest md512 = MessageDigest.getInstance("SHA-512");
+        byte[] expanded = md512.digest(sha256Digest);
+
+        LazySodiumJava ls = new LazySodiumJava(new SodiumJava());
+
+        final long amount = 1000000;
+        long counter = 0;
+
+        long start = System.nanoTime();
+        while (counter < amount) {
+
+            // modify in-hash so that jvm can't optimize the result of mapping
+            expanded[0] = (byte) (counter >> 24);
+            expanded[1] = (byte) (counter >> 16);
+            expanded[2] = (byte) (counter >> 8);
+            expanded[3] = (byte) counter;
+
+            Ristretto255.RistrettoPoint point = ls.cryptoCoreRistretto255FromHash(expanded);
+
+            if (point == null) {
+                throw new RuntimeException("Mapping failed");
+            }
+            counter++;
+        }
+        long end = System.nanoTime();
+
+        long timeTaken = (end - start) / 1_000_000;
+        float hashesPerMilliSecond = (float) counter / timeTaken;
+        System.out.println("hashesPerMilliSecond " + hashesPerMilliSecond);
+        // got 12.690678 on E-2276M
     }
 }
