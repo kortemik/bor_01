@@ -94,6 +94,8 @@ public class Ristretto255Test {
         Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(ls);
 
         Assertions.assertEquals(basePoint, basePoint.plus(zeroPoint));
+
+        Assertions.assertEquals(zeroPoint, zeroPoint.plus(zeroPoint));
     }
 
     @Test
