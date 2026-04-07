@@ -84,6 +84,19 @@ public class Ristretto255Test {
     }
 
     @Test
+    public void testZeroPoint() throws SodiumException {
+        LazySodiumJava ls = new LazySodiumJava(new SodiumJava());
+
+        byte[] zeroHash = new byte[Ristretto255.RISTRETTO255_HASH_BYTES];
+
+        Ristretto255.RistrettoPoint zeroPoint = ls.cryptoCoreRistretto255FromHash(zeroHash);
+
+        Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(ls);
+
+        Assertions.assertEquals(basePoint, basePoint.plus(zeroPoint));
+    }
+
+    @Test
     @EnabledIfSystemProperty(
             named = "testRistretto255Performance",
             matches = "true"
