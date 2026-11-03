@@ -155,8 +155,10 @@ public class OutBoxImpl implements OutBox {
 
     @Override
     public synchronized void addIndex(final Index index) throws SodiumException {
-        Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(lazySodiumJava);
-        merkleRangeTrees.put(index, new MerkleTreeImpl(lazySodiumJava, basePoint));
+        if (!merkleRangeTrees.containsKey(index)) {
+            Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(lazySodiumJava);
+            merkleRangeTrees.put(index, new MerkleTreeImpl(lazySodiumJava, basePoint));
+        }
     }
 
 }
