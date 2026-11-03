@@ -116,14 +116,27 @@ public class OutBoxImpl implements OutBox {
         if (!storedObjects.containsKey(metadata.id())) {
             throw new IllegalStateException("Metadata not stored");
         }
-        Metadata metadata1 = storedObjects.remove(metadata.id());
 
-        if (!merkleRangeTrees.containsKey(metadata1.index())) {
-            Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(lazySodiumJava);
-            merkleRangeTrees.put(metadata1.index(), new MerkleTreeImpl(lazySodiumJava, basePoint));
+        Metadata storedMetadata = storedObjects.get(metadata.id());
+
+        if (!storedMetadata.rowKey().equals(metadata.rowKey())) {
+            throw new IllegalArgumentException("Metadata does not match the stored object");
         }
 
-        merkleRangeTrees.get(metadata1.index()).addMetadataPoint(metadata1.epochHour(), metadata1.point());
+        MerkleTree existingTree = merkleRangeTrees.get(storedMetadata.index());
+
+        if (existingTree == null) {
+            Ristretto255.RistrettoPoint basePoint = Ristretto255.RistrettoPoint.base(lazySodiumJava);
+            MerkleTree newTree = new MerkleTreeImpl(lazySodiumJava, basePoint);
+            newTree.addMetadataPoint(storedMetadata.epochHour(), storedMetadata.point());
+            merkleRangeTrees.put(storedMetadata.index(), newTree);
+        }
+        else {
+            existingTree.addMetadataPoint(storedMetadata.epochHour(), storedMetadata.point());
+        }
+
+
+        storedObjects.remove(metadata.id());
     }
 
     @Override
