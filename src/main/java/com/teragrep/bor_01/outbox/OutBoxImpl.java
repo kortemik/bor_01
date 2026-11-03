@@ -138,14 +138,7 @@ public class OutBoxImpl implements OutBox {
 
     @Override
     public synchronized MerkleTree tree(Index index) {
-        final MerkleTree result;
-        if (!merkleRangeTrees.containsKey(index)) {
-            result = merkleRangeTrees.get(index);
-        }
-        else {
-            result = new MerkeTreeStub();
-        }
-        return result;
+        return merkleRangeTrees.getOrDefault(index, new MerkeTreeStub());
     }
 
     @Override
